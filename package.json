@@ -1,6 +1,6 @@
 {
   "name": "@evolvedmesh/elbert-plugin-sdk",
-  "version": "0.0.0-development",
+  "version": "1.0.0",
   "description": "Types, build tooling and documentation for Elbert plugins.",
   "license": "MIT",
   "type": "module",
