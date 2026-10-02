@@ -93,16 +93,40 @@ file, because a wrong argument fails when the page opens, not at build time.
 ## Build and load it
 
 ```shell
-bunx elbert-plugin dev        # build, then rebuild on every change
+bunx elbert-plugin dev        # build, rebuild on every change, print how to connect
 ```
 
-In Elbert open **Settings → Plugins → Load development folder** and pick the `dist/` folder. Allow
-the permissions the plugin asks for, and start it. Elbert watches the folder and restarts the
-plugin whenever a rebuild finishes. The plugin's log is on the same settings page.
+It prints two ways to load the plugin:
 
-`bunx elbert-plugin check` validates the manifest and does a structural check of every template.
-It does not fully parse RFW, so a template can pass `check` and still fail when its page opens.
-The error appears in the plugin's log.
+- **On this computer**: in Elbert open **Settings → Plugins → Developer → Load development
+  folder** and pick the `dist/` folder it names. Allow the permissions the plugin asks for. Elbert
+  remembers the folder, so you only do this once.
+- **On a phone or another computer** on the same network: **Settings → Plugins → Developer →
+  Connect to a dev server**, then type the address and the six-digit pairing code `dev` printed.
+  The plugin runs there until you disconnect. A "DEV" badge stays at the top of every page while it
+  is connected. Paired devices stay paired across restarts of `dev` for a day.
+
+From then on, every save reloads the plugin, and how depends on what you changed:
+
+- **A template** (`.rfwtxt`): re-parsed in place in about a second. Open pages redraw with the
+  data they already have, and the plugin keeps running.
+- **Code**: the plugin restarts and Elbert reopens the pages that were open, with the same route
+  and parameters and the same navigation stack underneath. Each page's `page.state` is carried
+  over and `page.restored` is true, so `open` can show what it had instead of fetching it again
+  ([api.md](api.md#development)).
+
+When something breaks, the page you are looking at says so. Template parse errors (with
+`file:line:column`), widgets that failed to build, uncaught JavaScript errors and failed builds
+appear in an overlay inside the page. JavaScript stack traces point at your TypeScript
+(`src/index.ts:42:7`), because `dev` writes a source map. The same lines, plus everything the
+plugin logs, print in the `dev` terminal. A failed build keeps the last good one running.
+
+`bunx elbert-plugin dev --open` also takes Elbert to your plugin's first page (or `--open /route`).
+`bunx elbert-plugin check` validates the manifest and does a structural check of every template;
+Elbert's real parser reports the rest in the overlay.
+
+Don't use Flutter's hot restart (`R`) on Elbert while plugins run, because it can crash the app.
+Plugin reloads don't need it.
 
 ## How a page works
 
@@ -123,7 +147,8 @@ Keep `open` fast. Return the initial data immediately and load the rest asynchro
 - [api.md](api.md) — the `elbert` global.
 - [templates.md](templates.md) and [widgets.md](widgets.md) — writing the UI.
 - [permissions.md](permissions.md) — what each permission allows.
-- [packaging.md](packaging.md) — building and shipping a `.elbx`.
+- [packaging.md](packaging.md) — building and shipping a `.elbx`, and publishing it so users can
+  install from your GitHub repository's URL.
 - [runtime-packs.md](runtime-packs.md) — running native programs on Android.
 - `examples/radio-browser` — a small complete plugin: navigation with its own phone dock, pages,
   streams, a settings page, a track action and storage.

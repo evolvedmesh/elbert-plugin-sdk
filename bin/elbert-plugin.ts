@@ -3,7 +3,8 @@
 // elbert-plugin — build, check, pack and live-develop Elbert plugins.
 //
 //   elbert-plugin build   [--entry src/index.ts] [--out dist] [--minify]
-//   elbert-plugin dev     [--entry src/index.ts] [--out dist]
+//   elbert-plugin dev     [--entry src/index.ts] [--out dist] [--open [route]]
+//                         [--port 7357] [--host 0.0.0.0] [--no-lan]
 //   elbert-plugin check
 //   elbert-plugin pack    [--out dist] [--to .]
 //   elbert-plugin version <semver>
@@ -20,6 +21,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { zipSync } from 'fflate';
+import { dev as devLoop } from './dev';
 
 const API_VERSION = 1;
 const PERMISSIONS = ['network', 'storage', 'process', 'player', 'library', 'playlists', 'lyrics', 'history'];
@@ -63,14 +65,21 @@ function help() {
   console.log(`elbert-plugin <command>
 
   build    Bundle the plugin into dist/ (manifest, code, templates, assets)
-  dev      Build, then rebuild on every change — load dist/ in Elbert with
-           Settings → Plugins → Load development folder
+  dev      Build, then rebuild on every change. Templates reload in place in
+           Elbert, code changes restart the plugin and reopen its pages, and
+           Elbert's log and errors print here. Load dist/ with Settings →
+           Plugins → Load development folder, or connect another device
+           (a phone) to the dev server it starts on your network
   check    Validate elbert-plugin.json and the files it names
   pack     Zip dist/ into <id>-<version>.elbx, ready to install
   version  Set the manifest's version (used by release tooling)
 
 Options: --entry <file> (default src/index.ts, then src/index.js)
-         --out <dir> (default dist)   --minify   --to <dir> (pack)`);
+         --out <dir> (default dist)   --minify   --to <dir> (pack)
+dev:     --open [route]  navigate a connected Elbert there (default: the
+                         plugin's first page)
+         --port <n> (default 7357)   --host <addr> (default 0.0.0.0)
+         --no-lan        serve nothing; this machine's folder only`);
 }
 
 // ---- Manifest -----------------------------------------------------------------
@@ -235,6 +244,8 @@ async function bundle(m: Manifest): Promise<boolean> {
     target: 'browser',
     minify: Boolean(flags.minify),
     sourcemap: 'none',
+    // Report failures in result.logs rather than throwing (Bun ≥ 1.2 throws by default).
+    throw: false,
   });
   for (const log of result.logs) console.error(log);
   if (!result.success) return false;
@@ -258,50 +269,33 @@ function copyStatic(m: Manifest) {
 
 async function build() {
   const m = check();
-  fs.rmSync(outDir(), { recursive: true, force: true });
+  // Empty dist/ rather than delete it: a running Elbert may be watching the
+  // folder itself, and `.elbert/` holds `dev`'s paired sessions.
+  const out = outDir();
+  if (fs.existsSync(out)) {
+    for (const e of fs.readdirSync(out)) {
+      if (e !== '.elbert') fs.rmSync(path.join(out, e), { recursive: true, force: true });
+    }
+  }
   copyStatic(m);
   if (!(await bundle(m))) throw new Error('The build failed.');
   console.log(`✓ built ${path.relative(root, outDir()) || '.'}/`);
   return m;
 }
 
-async function dev() {
-  const m = check();
-  copyStatic(m);
-  const rebuild = debounce(async () => {
-    const t = new Date().toLocaleTimeString();
-    try {
-      const ok = await bundle(readManifest());
-      console.log(ok ? `✓ ${t} rebuilt — Elbert reloads the plugin` : `✗ ${t} build failed`);
-    } catch (e) {
-      console.error(`✗ ${t} ${e instanceof Error ? e.message : e}`);
-    }
-  }, 150);
-  // Templates, assets and the manifest are copied, not bundled.
-  const restatic = debounce(() => {
-    try {
-      copyStatic(readManifest());
-      console.log(`✓ ${new Date().toLocaleTimeString()} templates/assets updated`);
-    } catch (e) {
-      console.error(`✗ ${e instanceof Error ? e.message : e}`);
-    }
-  }, 150);
-  await rebuild();
-  const src = path.dirname(path.resolve(root, entryPoint()));
-  fs.watch(src, { recursive: true }, rebuild);
-  for (const target of ['elbert-plugin.json', ...(Object.values(m.ui ?? {}) as string[]), 'assets']) {
-    const p = path.join(root, target);
-    if (fs.existsSync(p)) fs.watch(p, { recursive: fs.statSync(p).isDirectory() }, restatic);
-  }
-  console.log(`Watching. In Elbert: Settings → Plugins → Load development folder → ${outDir()}`);
-}
-
-function debounce(fn: () => unknown, ms: number) {
-  let t: ReturnType<typeof setTimeout> | undefined;
-  return () => {
-    clearTimeout(t);
-    t = setTimeout(fn, ms);
-  };
+function dev() {
+  const port = typeof flags.port === 'string' ? Number(flags.port) : 7357;
+  if (!Number.isInteger(port) || port <= 0 || port > 65535) throw new Error('--port must be a port number');
+  return devLoop({
+    root,
+    outDir: outDir(),
+    entry: entryPoint(),
+    check,
+    readManifest,
+    port,
+    host: flags['no-lan'] ? false : typeof flags.host === 'string' ? flags.host : '0.0.0.0',
+    open: flags.open === true ? true : typeof flags.open === 'string' ? flags.open : undefined,
+  });
 }
 
 // ---- Pack ---------------------------------------------------------------------------
@@ -313,6 +307,9 @@ async function pack() {
   const files: Record<string, Uint8Array> = {};
   const walk = (dir: string) => {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      // Never ship what `dev` leaves behind: `.elbert/` (logs, paired dev
+      // sessions) and source maps.
+      if (e.name.startsWith('.') || e.name.endsWith('.map')) continue;
       const abs = path.join(dir, e.name);
       if (e.isDirectory()) walk(abs);
       else files[path.relative(out, abs).split(path.sep).join('/')] = fs.readFileSync(abs);

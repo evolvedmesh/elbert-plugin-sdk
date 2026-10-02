@@ -47,6 +47,9 @@ export interface Elbert {
   };
   readonly ElbertError: new (code: string, message: string) => ElbertError;
 
+  /** Live development: reloads and state carried across them. */
+  readonly dev: Dev;
+
   /** Runs once the plugin's code has loaded. Register pages, routes and the rest here. */
   onActivate(fn: () => void | Promise<void>): void;
   /** Runs (briefly) before the plugin is stopped. Everything it registered is removed anyway. */
@@ -435,14 +438,41 @@ export interface Page<D extends object = Record<string, any>, S extends object =
   readonly params: Record<string, string>;
   readonly query: Record<string, string>;
   readonly data: D;
-  /** Your own per-page state; never sent anywhere. */
+  /**
+   * Your own per-page state; never sent anywhere. In development, when a code
+   * change restarts the plugin, each open page's `state` is carried to the
+   * page that reopens in its place (see `restored`) — keep it JSON.
+   */
   state: S;
+  /**
+   * True when this page reopened after a development reload with its earlier
+   * `state`. `open` can show what it had instead of fetching again.
+   */
+  readonly restored: boolean;
   /** True once the user left the page. */
   readonly closed: boolean;
   /** Merges into `data` (top-level keys) and redraws. Nulls are dropped. */
   set(patch: Partial<D>): void;
   /** For a page shown with `ui.sheet`: closes it, resolving the sheet with `value`. */
   dismiss(value?: Json): Promise<void>;
+}
+
+/**
+ * Development helpers. A plugin loaded from a development folder or a dev
+ * server restarts on every code change; these carry values across that
+ * restart. Elsewhere they do nothing harmful: `isDev` is false, `persist`
+ * savers are never called and `restore` returns `undefined`.
+ */
+export interface Dev {
+  /** Loaded from a development folder or a dev server. */
+  readonly isDev: boolean;
+  /**
+   * Registers `save`, called just before a development reload; what it
+   * returns (JSON) is handed to the next engine as `restore(key)`.
+   */
+  persist(key: string, save: () => Json | undefined | Promise<Json | undefined>): void;
+  /** What `persist(key, …)` saved before the reload, once; `undefined` otherwise. */
+  restore<T extends Json = Json>(key: string): T | undefined;
 }
 
 export interface PageController<D extends object = any, S extends object = any> {

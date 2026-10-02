@@ -196,6 +196,43 @@ await elbert.ui.setRoutes([
 - An event handler's return value reaches widgets that wait for it; pull-to-refresh stays open
   until the handler's promise settles.
 
+## Development
+
+A plugin loaded from a development folder or a dev server (see
+[getting-started.md](getting-started.md#build-and-load-it)) restarts whenever its code changes. Two
+things survive the restart:
+
+- **Each open page's `page.state`**. The page reopens with the same route and parameters, its
+  earlier `state`, and `page.restored === true`:
+
+  ```ts
+  elbert.ui.page('top', {
+    open(page) {
+      if (page.restored && page.state.stations?.length) {
+        return { status: 'ready', stations: page.state.stations.map(card) }; // no refetch
+      }
+      page.state.stations = [];
+      void load(page);
+      return { status: 'loading', stations: [] };
+    },
+  });
+  ```
+
+- **Anything you register with `elbert.dev.persist`**, read back with `elbert.dev.restore` in the
+  new engine:
+
+  ```ts
+  let cache: Station[] = elbert.dev.restore('cache') ?? [];
+  elbert.dev.persist('cache', () => cache);
+  ```
+
+Both must be JSON. `elbert.dev.isDev` says whether the plugin is in development. In an installed
+plugin `persist` savers are never called and `restore` returns `undefined`, so neither needs a
+guard. Template-only changes don't restart anything, so state is untouched.
+
+Sheets (`ui.sheet`) are closed by a reload, because their promise belonged to the code that was
+replaced.
+
 ### Navigation
 
 ```ts
