@@ -1,0 +1,14 @@
+{
+  "id": "com.example.radio-browser",
+  "name": "Radio Browser",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "description": "Internet radio from the community-run radio-browser.info directory: top stations, search and favourites.",
+  "author": "Elbert plugin SDK sample",
+  "icon": "radio",
+  "entry": "plugin.js",
+  "ui": {
+    "radio": "ui/radio.rfwtxt"
+  },
+  "permissions": ["network", "player"]
+}

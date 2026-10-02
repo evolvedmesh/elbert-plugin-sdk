@@ -1,0 +1,174 @@
+// Radio Browser's pages. Each widget here is a page the plugin's code names
+// in a route (`radio:TopPage`); `data.*` is whatever that page's controller
+// returned or `set`, and `event "name" {}` calls the controller's handler.
+//
+// Elbert's widgets (`import elbert;`) take colour and text *roles*, never
+// colours, so the plugin follows the user's theme without trying.
+
+import core;
+import material;
+import elbert;
+
+// The part of a list page under its header: a spinner, an error, an empty
+// message, or the grid of station cards.
+widget StationGrid = switch args.status {
+  "loading": Loader(),
+  "error": EmptyState(icon: "wifi-off", title: "Couldn't reach Radio Browser", text: args.error),
+  "empty": EmptyState(icon: args.emptyIcon, text: args.emptyText),
+  default: ScrollPage(
+    topInset: false,
+    bleed: true,
+    refreshEvent: args.refreshEvent,
+    slivers: [
+      PageInset(
+        sliver: true,
+        top: 4.0,
+        child: CardGrid(
+          sliver: true,
+          items: args.stations,
+          onTap: event "play" {},
+        ),
+      ),
+    ],
+  ),
+};
+
+widget TopPage = SectionScaffold(
+  tabs: data.tabs,
+  current: data.current,
+  title: "Top stations",
+  child: StationGrid(
+    status: data.status,
+    error: data.error,
+    stations: data.stations,
+    refreshEvent: "refresh",
+    emptyIcon: "radio",
+    emptyText: "No stations match your settings.",
+  ),
+);
+
+widget SearchPage = SectionScaffold(
+  tabs: data.tabs,
+  current: data.current,
+  title: "Search",
+  child: Column(
+    crossAxisAlignment: "stretch",
+    children: [
+      PageInset(
+        bottom: 8.0,
+        child: SearchField(hint: "Search stations…", onQuery: event "query" {}),
+      ),
+      Expanded(
+        child: BleedClip(
+          child: StationGrid(
+            status: data.status,
+            error: data.error,
+            stations: data.stations,
+            emptyIcon: "search",
+            emptyText: data.emptyText,
+          ),
+        ),
+      ),
+    ],
+  ),
+);
+
+widget FavouritesPage = SectionScaffold(
+  tabs: data.tabs,
+  current: data.current,
+  title: "Favourites",
+  child: switch data.status {
+    "empty": EmptyState(
+      icon: "heart",
+      title: "No favourites yet",
+      text: "Open a station and tap Favourite, or use a playing station's ⋯ menu.",
+    ),
+    default: ScrollPage(
+      topInset: false,
+      slivers: [
+        PageInset(
+          sliver: true,
+          child: SliverBox(
+            child: Column(
+              children: [
+                ...for station in data.stations:
+                  Padding(
+                    padding: [0.0, 0.0, 0.0, 8.0],
+                    child: ResultTile(
+                      title: station.title,
+                      subtitle: station.subtitle,
+                      cover: station.cover,
+                      typeIcon: "radio",
+                      actionIcon: "x",
+                      actionLabel: "Remove",
+                      onAction: event "remove" { id: station.id },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  },
+);
+
+widget StationPage = Stagger(
+  child: ScrollPage(
+    bottomInset: "dock",
+    slivers: [
+      StickyHeader(
+        title: data.title,
+        subtitle: data.subtitle,
+        type: "STATION",
+        cover: data.cover,
+        info: data.info,
+        onPlayAll: event "play" {},
+        onShuffle: event "play" {},
+        topInset: false,
+      ),
+      SliverPad(
+        padding: [16.0, 20.0, 16.0, 0.0],
+        sliver: SliverBox(
+          child: SlideIn(
+            delayMs: 150,
+            child: Column(
+              crossAxisAlignment: "start",
+              children: [
+                ActionRow(actions: data.actions, onAction: event "action" {}),
+                SizedBox(height: 16.0),
+                ThemedText(text: data.tags, style: "bodyMedium", color: "onSurfaceVariant"),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+);
+
+widget SettingsPage = Column(
+  crossAxisAlignment: "start",
+  children: [
+    SettingsHeader(
+      icon: "radio",
+      title: "Radio Browser",
+      description: "Stations come from radio-browser.info, a free directory run by its community.",
+    ),
+    SizedBox(height: 16.0),
+    TextInput(
+      label: "Country",
+      hint: "Two-letter code, e.g. DE — empty for worldwide",
+      icon: "globe",
+      value: data.country,
+      onChanged: event "country" {},
+    ),
+    SizedBox(height: 12.0),
+    SwitchRow(
+      title: "High-quality streams only",
+      subtitle: "Hide stations under 128 kbps from the Top list.",
+      value: data.highQuality,
+      onChanged: event "highQuality" {},
+    ),
+  ],
+);
