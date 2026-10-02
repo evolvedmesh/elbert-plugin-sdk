@@ -14,7 +14,7 @@ bunx elbert-plugin dev
 | Command                          | Does                                                                                                              |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `elbert-plugin build`            | Validates the manifest and bundles `src/index.ts` into `dist/plugin.js`, copying templates and assets.            |
-| `elbert-plugin dev`              | The same, rebuilding on every change. Load `dist/` in Elbert with *Settings → Plugins → Load development folder*. |
+| `elbert-plugin dev`              | The same, live: templates reload in place, code reloads keep your place, errors show in the page and here. Prints how to load it on this computer or connect a phone. |
 | `elbert-plugin check`            | Manifest rules and a structural check of every template.                                                          |
 | `elbert-plugin pack`             | Zips `dist/` into `<id>-<version>.elbx`.                                                                          |
 | `elbert-plugin version <semver>` | Sets the manifest's version, for release tooling.                                                                 |

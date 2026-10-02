@@ -17,10 +17,15 @@ messages must be Conventional Commits. Don't commit or push unless asked.
 - `bin/elbert-plugin.ts` is the CLI, a Bun script (`#!/usr/bin/env bun`) with `fflate` (zip) as its
   only dependency, and has these commands:
   - `build`: `Bun.build` → one IIFE (`format: 'iife'`, `target: 'browser'`) at `dist/plugin.js`.
-  - `dev`: build, then rebuild on changes (`fs.watch` over the entry's folder, templates, assets).
+  - `dev` lives in `bin/dev.ts` (see "The dev loop" below).
   - `check`: manifest validation plus a bracket lint of templates. It does **not** fully parse
     RFW.
-  - `pack`: zips the plugin into `<id>-<version>.elbx`.
+  - `pack`: zips the plugin into `<id>-<version>.elbx`. It skips dot entries and `*.map`, so a
+    `dist/` left behind by `dev` never ships its source map or `.elbert/`.
+  - `build` empties `dist/` but keeps the folder and `.elbert/`, because a running Elbert may be
+    watching it.
+  - `Bun.build` is always called with `throw: false`. Bun ≥ 1.2 throws on a failed build
+    otherwise, which once killed the `dev` loop on the first typo.
   - `version`.
 - `examples/radio-browser` is the sample plugin. It deliberately does not use Apple Music; the
   real Apple Music plugin is `../elbert-apple-music`. It shows a section with its own phone dock,
@@ -41,8 +46,47 @@ bun run example:pack     # → dist/
 Releases: semantic-release under `bunx --bun`; the version bump is `scripts/set-version.ts`
 (no `@semantic-release/npm`).
 
+## The dev loop (`bin/dev.ts`)
+
+`elbert-plugin dev` builds into `dist/` and rebuilds on any change under the project (one
+recursive `fs.watch`; `dist/`, `node_modules/`, `.git` and dot-paths ignored). It writes a file
+**only when its bytes changed**, and atomically by rename. Elbert relies on this to tell a
+template edit from a code edit:
+
+- If only `ui/*.rfwtxt` changed, Elbert re-parses those libraries in place and open pages keep
+  their data.
+- Anything else restarts the engine (`PluginHost.reloadPlugin`). Pages reopen on the same route
+  with their `page.state`.
+
+A comment-only edit prints "no output change" and reloads nothing; that is correct, not a bug.
+
+Two transports, both active at once:
+
+- **This machine, through `dist/.elbert/`:**
+  - Elbert writes `log.jsonl` (log lines, dev issues, reload results, plugin state), which the
+    CLI tails, following the file by inode. Elbert recreates it on each load rather than
+    truncating it.
+  - The CLI writes `open` (`--open`) and `build-error` (present while the last build failed). The
+    host watcher handles both.
+- **LAN, through `Bun.serve` on port 7357:**
+  - `POST /pair {code}` → session token. Five wrong codes rotate the code. Tokens persist in
+    `.elbert/sessions.json` for 24 h, so restarting `dev` doesn't force re-pairing.
+  - `GET /files` returns manifest plus `{path, sha1, size}`; `GET /file?path=` serves one file,
+    refusing dot-paths and anything outside `dist/`.
+  - `/ws` carries `{t:'changed'|'build'|'open'}` out, and the same messages as `log.jsonl` come
+    back in.
+  - Elbert always connects out, and nothing on the Elbert side listens.
+
+Bridge interfaces (docker, veth, virbr…) are left out of the printed addresses. `--no-lan`
+serves nothing. `dev` builds with `sourcemap: 'external'`, and the host maps stacks with it.
+
 ## Facts worth knowing when documenting or changing the API
 
+- **Development state:** `elbert.dev.isDev`, `elbert.dev.persist(key, save)`,
+  `elbert.dev.restore(key)` and `page.restored` (API v1 additions). On a development reload the
+  host invokes `dev.snapshot`, gets each open page's `page.state` and every persisted value, and
+  hands them to the new engine: the values through the config, the page states through
+  `page.open`'s `restored` argument. All of it must be JSON.
 - **Runtime:** plugins run in QuickJS-ng, one engine per plugin in a background isolate.
   - No Node, browser or `URL` globals. Timers and `console` are provided by the host.
   - Limits: 256 MB heap, 512 KB stack, 10 s per call.
