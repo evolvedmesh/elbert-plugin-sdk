@@ -33,17 +33,55 @@ tooling can pack stale files.
 
 ## Install and try
 
-- **Install from file**: Settings → Plugins → *Install from file*, pick the `.elbx`. Elbert
-  validates it, shows the permissions and starts it once allowed. Installing a newer version of an
-  installed id replaces the package and keeps the plugin's data.
-- **Load development folder**: Settings → Plugins → *Load development folder*, pick `dist/`. The
-  folder is watched; rebuilding restarts the plugin.
+A plugin is one file, and every way of adding it ends at the same review screen. That screen
+shows who made it, where it runs, what it may do and, for an update, what changes ("Updates 1.0.0 →
+1.1.0", new permissions marked **New**). Nothing runs until it is allowed.
+
+- **Open it with Elbert**: double-click an `.elbx` on the desktop (Windows installs the file
+  association; Linux packages register `application/x-elbert-plugin` from
+  `linux/elbert-plugin.xml`; macOS declares the type), or *Open with* / *Share* to Elbert on
+  Android. If Elbert is already running, the file goes to that window.
+- **Drop it** anywhere on Elbert's window (desktop).
+- **From GitHub**: Settings → Plugins → Add a plugin → *From GitHub or a link*, then paste the
+  repository (`owner/repo`, or any github.com link to it). Elbert installs the `.elbx` attached to
+  its latest release. If that release has none, it uses the newest prerelease that does, and a
+  `…/releases/tag/<tag>` link pins one release. A direct link to an `.elbx` file works too.
+- **Settings → Plugins → Add a plugin → *Choose file***.
+
+Installing a newer version of an installed id replaces the package and keeps the plugin's data.
+
+For development, see [getting-started.md](getting-started.md#build-and-load-it): *Load development
+folder* (this computer) and *Connect to a dev server* (any device on the network).
+
+### `dev` options
+
+| Flag             | Default   | Does                                                                     |
+| ---------------- | --------- | ------------------------------------------------------------------------ |
+| `--open [route]` |           | Navigates a connected Elbert to `route`, or to the plugin's first page.  |
+| `--port <n>`     | `7357`    | The dev server's port.                                                   |
+| `--host <addr>`  | `0.0.0.0` | The interface it listens on.                                             |
+| `--no-lan`       |           | No server at all: only *Load development folder* on this computer.       |
+
+The dev server only answers a device that paired with the code it printed. That code buys a random
+session token, five wrong codes replace the code, and Elbert always connects out to the server,
+never the other way. It serves `dist/` and nothing else. A connected plugin still runs with only
+the permissions granted on that device.
+
+`dev` also writes `plugin.js.map` beside the bundle so stack traces map to your sources. Elbert
+and `dev` exchange files in `dist/.elbert/` (Elbert's log, `--open` requests, the last build error,
+paired sessions). `pack` never includes either, and the dev server never serves `.elbert/`.
 
 Installed packages live in `<appSupport>/plugins/packages/<id>` (replaced wholesale on update) and
 plugin data in `plugins/data/<id>` (kept across updates). The registry in
 `plugins/registry.json` records which plugins are enabled and what each was granted.
 
 ## Versioning and releases
+
+**Attach the `.elbx` to every GitHub release.** That is all "install from GitHub" needs: users
+paste your repository and Elbert takes the package from the latest release (public repositories
+only, since Elbert asks GitHub anonymously). The semantic-release setup below does it with
+`@semantic-release/github`'s `assets`. Attach one `.elbx` per release; if there are several,
+Elbert takes the first.
 
 `elbert-plugin version <semver>` rewrites `version` in `elbert-plugin.json`, which is what release
 tooling calls. A typical semantic-release setup:

@@ -128,7 +128,7 @@ type ListData = {
   emptyText?: string;
   stations: unknown[];
 };
-type ListState = { stations: Station[] };
+type ListState = { stations: Station[]; query?: string };
 type ListPage = Page<ListData, ListState>;
 
 async function loadInto(page: ListPage, load: () => Promise<Station[]>) {
@@ -142,8 +142,19 @@ async function loadInto(page: ListPage, load: () => Promise<Station[]>) {
   }
 }
 
+/**
+ * After a development reload `page.state` comes back as it was (see
+ * `page.restored`), so a page can show what it had instead of fetching again.
+ */
+function restoredList(page: ListPage, current: string): ListData | null {
+  if (!page.restored || !page.state.stations?.length) return null;
+  return { tabs: tabs(), current, status: 'ready', stations: page.state.stations.map(card) };
+}
+
 elbert.ui.page<ListData, ListState>('top', {
   open(page: ListPage) {
+    const restored = restoredList(page, SECTION);
+    if (restored) return restored;
     page.state.stations = [];
     void loadInto(page, topStations);
     return { tabs: tabs(), current: SECTION, status: 'loading', stations: [] };
@@ -164,6 +175,8 @@ elbert.ui.page<ListData, ListState>('top', {
 
 elbert.ui.page<ListData, ListState>('search', {
   open(page: ListPage) {
+    const restored = restoredList(page, `${SECTION}/search`);
+    if (restored) return { ...restored, emptyText: `Nothing found for "${page.state.query ?? ''}".` };
     page.state.stations = [];
     const hint = 'Search over 50,000 stations by name.';
     return { tabs: tabs(), current: `${SECTION}/search`, status: 'empty', emptyText: hint, stations: [] };
@@ -171,6 +184,7 @@ elbert.ui.page<ListData, ListState>('search', {
   events: {
     async query(page: ListPage, { query }) {
       const q = String(query ?? '').trim();
+      page.state.query = q;
       if (q.length < 2) {
         page.state.stations = [];
         page.set({ status: 'empty', emptyText: 'Search over 50,000 stations by name.', stations: [] });
