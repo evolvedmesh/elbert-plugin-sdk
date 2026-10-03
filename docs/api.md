@@ -207,7 +207,7 @@ await elbert.ui.setRoutes([
 - A **route** is `path` plus a controller (`page`) and a template (`widget`, `library:Widget`).
   `:name` segments arrive in `page.params`; the query string in `page.query`.
 - Paths are absolute and must start with a segment of your own. `search`, `albums`, `artists`,
-  `songs`, `playlists`, `stats`, `settings` and `plugins` are reserved. A route may also be one of
+  `songs`, `playlists`, `stats`, `settings`, `folders` and `plugins` are reserved. A route may also be one of
   Elbert's own pages: `{ path: '/radio/settings', host: 'settings' }` mounts the Settings index
   under your section (so the phone dock stays yours while it is open), and
   `{ path: '/radio/settings/:section', host: 'settingsSection' }` its section pages.
