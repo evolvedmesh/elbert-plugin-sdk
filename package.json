@@ -8,6 +8,9 @@
   "exports": {
     ".": {
       "types": "./types/elbert.d.ts"
+    },
+    "./theme": {
+      "types": "./types/theme.d.ts"
     }
   },
   "bin": {
@@ -16,6 +19,7 @@
   "files": [
     "bin",
     "types",
+    "schemas",
     "docs",
     "README.md"
   ],
@@ -36,9 +40,13 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "fix": "biome check --write .",
-    "check": "bun run typecheck && bun run lint && bun run example:build",
+    "check": "bun run typecheck && bun run lint && bun scripts/gen-schemas.ts --check && bun run docs:check && bun run example:build && bun run theme:build",
     "example:build": "cd examples/radio-browser && bun ../../bin/elbert-plugin.ts build",
-    "example:pack": "cd examples/radio-browser && bun ../../bin/elbert-plugin.ts pack --to ../../dist"
+    "example:pack": "cd examples/radio-browser && bun ../../bin/elbert-plugin.ts pack --to ../../dist",
+    "schemas": "bun scripts/gen-schemas.ts",
+    "docs:check": "bun scripts/check-docs.ts",
+    "theme:build": "cd examples/dusk-theme && bun ../../bin/elbert-plugin.ts build",
+    "theme:pack": "cd examples/dusk-theme && bun ../../bin/elbert-plugin.ts pack --to ../../dist"
   },
   "dependencies": {
     "fflate": "^0.8.3"

@@ -26,13 +26,26 @@ messages must be Conventional Commits. Don't commit or push unless asked.
     watching it.
   - `Bun.build` is always called with `throw: false`. Bun ≥ 1.2 throws on a failed build
     otherwise, which once killed the `dev` loop on the first typo.
+  - `init`: scaffolds a plugin (or a theme with `--theme`) from the templates in `bin/init.ts`, which
+    must always produce a project that passes `check` and loads in Elbert. It never overwrites a file.
+    Change a template and re-run the smoke test: `init` into a temp dir with `--sdk file:<this repo>`,
+    `bun install`, `bun run check`, `bun run pack`.
   - `version`.
 - `examples/radio-browser` is the sample plugin. It deliberately does not use Apple Music; the
   real Apple Music plugin is `../elbert-apple-music`. It shows a section with its own phone dock,
   pages and templates, streams, a settings page, a track action and plugin storage. Elbert's
   `test/plugin_host_test.dart` runs it, so keep it building.
+- **Themes** are packages with `"type": "theme"`: no `entry`, no permissions, a `theme.json` instead.
+  `types/theme.d.ts` and `bin/theme.ts` (used by `check`, `build` and `dev`) mirror the host's
+  `lib/theme/theme_pack.dart` - change them together. That includes the string keys
+  (`theme_strings.dart`), the component fields (`theme_components.dart`), the slots and the widget
+  names a template may not reuse. `examples/dusk-theme` is the sample, built by
+  `bun run theme:build` as part of `check`; Elbert's `test/theme_background_test.dart` loads it when
+  `ELBERT_SAMPLE_THEME` points at its `dist/`. A theme is data only, so don't add anything to
+  `theme.json` that needs logic or access; the decoration widgets (`GradientFill`, `Orb`,
+  `Particles`, `Waves`, `Spin`, `Drift`, `Pulse`) are in `docs/widgets.md` under "Decoration".
 - `docs/` is the developer documentation: getting started, the manifest, the API, templates, the
-  widget reference, permissions, packaging and runtime packs. `docs/widgets.md` is derived from
+  widget reference, themes, permissions, packaging and runtime packs. `docs/widgets.md` is derived from
   `../elbert/lib/plugins/ui/widgets/lib_*.dart`; when a widget or argument changes there, change
   it here.
 
@@ -42,6 +55,13 @@ bun run check            # tsc (CLI + sample), biome check, sample build — wha
 bun run fix              # biome check --write
 bun run example:pack     # → dist/
 ```
+
+- `schemas/*.schema.json` are **generated** by `scripts/gen-schemas.ts` from the tables in `bin/theme.ts`
+  (colour roles, components, string keys, slots); `bun run schemas` rewrites them and `check` fails if
+  they are stale. Biome ignores the folder. `init` points new projects' `$schema` at them.
+- `scripts/check-docs.ts` (in `check`) compiles every ```ts block in `docs/cookbook.md` against
+  `types/elbert.d.ts` and runs every JSON block in the "Recipes" section of `docs/themes.md` through the
+  theme rules. A recipe that stops compiling or validating is a docs bug.
 
 Releases: semantic-release under `bunx --bun`; the version bump is `scripts/set-version.ts`
 (no `@semantic-release/npm`).

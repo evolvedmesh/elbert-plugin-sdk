@@ -1,0 +1,15 @@
+{
+  "id": "com.example.dusk-theme",
+  "name": "Dusk",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "type": "theme",
+  "description": "A violet-and-amber evening palette with softer corners and a slowly drifting aurora behind every page.",
+  "author": "Elbert plugin SDK sample",
+  "icon": "moon",
+  "theme": "theme.json",
+  "ui": {
+    "background": "ui/background.rfwtxt",
+    "rows": "ui/rows.rfwtxt"
+  }
+}

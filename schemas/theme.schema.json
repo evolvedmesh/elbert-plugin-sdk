@@ -1,0 +1,916 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Elbert theme (theme.json)",
+  "definitions": {
+    "hex": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+      "description": "#RGB, #RRGGBB or #AARRGGBB"
+    },
+    "colorRef": {
+      "description": "A colour role (follows light, dark and AMOLED) or a fixed #RRGGBB / #AARRGGBB.",
+      "anyOf": [
+        {
+          "enum": [
+            "primary",
+            "onPrimary",
+            "primaryContainer",
+            "onPrimaryContainer",
+            "secondary",
+            "onSecondary",
+            "secondaryContainer",
+            "onSecondaryContainer",
+            "tertiary",
+            "onTertiary",
+            "tertiaryContainer",
+            "onTertiaryContainer",
+            "error",
+            "onError",
+            "errorContainer",
+            "onErrorContainer",
+            "surface",
+            "onSurface",
+            "onSurfaceVariant",
+            "surfaceDim",
+            "surfaceBright",
+            "surfaceContainerLowest",
+            "surfaceContainerLow",
+            "surfaceContainer",
+            "surfaceContainerHigh",
+            "surfaceContainerHighest",
+            "outline",
+            "outlineVariant",
+            "inverseSurface",
+            "onInverseSurface",
+            "inversePrimary",
+            "shadow",
+            "scrim"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        }
+      ]
+    },
+    "colorSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primary": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "onPrimary": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "primaryContainer": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "onPrimaryContainer": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "secondary": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "onSecondary": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "secondaryContainer": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "onSecondaryContainer": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "tertiary": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "onTertiary": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "tertiaryContainer": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "onTertiaryContainer": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "error": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "onError": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "errorContainer": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "onErrorContainer": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "surface": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "onSurface": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "onSurfaceVariant": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "surfaceDim": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "surfaceBright": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "surfaceContainerLowest": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "surfaceContainerLow": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "surfaceContainer": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "surfaceContainerHigh": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "surfaceContainerHighest": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "outline": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "outlineVariant": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "inverseSurface": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "onInverseSurface": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "inversePrimary": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "shadow": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        },
+        "scrim": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "#RGB, #RRGGBB or #AARRGGBB"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "seed": {
+      "$ref": "#/definitions/hex",
+      "description": "The colour Elbert's palette is generated from. Setting it takes the accent and wallpaper colours from the user."
+    },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "light": {
+          "description": "Colour roles to override in light mode.",
+          "$ref": "#/definitions/colorSet"
+        },
+        "dark": {
+          "description": "Colour roles to override in dark mode.",
+          "$ref": "#/definitions/colorSet"
+        },
+        "amoled": {
+          "description": "Applied on top of dark after Elbert makes the surfaces true black.",
+          "$ref": "#/definitions/colorSet"
+        }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "properties": {
+        "fontFamily": {
+          "type": "string",
+          "description": "A Google Fonts family."
+        },
+        "font": {
+          "type": "object",
+          "description": "A font the theme ships. Wins over fontFamily.",
+          "required": [
+            "family",
+            "files"
+          ],
+          "properties": {
+            "family": {
+              "type": "string"
+            },
+            "files": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "\\.(ttf|otf)$"
+              },
+              "description": ".ttf or .otf files inside the package."
+            }
+          }
+        },
+        "scale": {
+          "type": "number",
+          "minimum": 0.85,
+          "maximum": 1.25,
+          "description": "Multiplies every text size."
+        }
+      }
+    },
+    "shapes": {
+      "type": "object",
+      "properties": {
+        "scale": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Multiplies every corner in the app. 0 is square, 1 is Elbert's own."
+        },
+        "radii": {
+          "type": "object",
+          "description": "Pins named corners to an exact radius; these ignore scale.",
+          "additionalProperties": false,
+          "properties": {
+            "extraSmall": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200
+            },
+            "small": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200
+            },
+            "medium": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200
+            },
+            "large": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200
+            },
+            "largeIncreased": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200
+            },
+            "extraLarge": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200
+            },
+            "extraLargeIncreased": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200
+            }
+          }
+        },
+        "buttons": {
+          "enum": [
+            "pill",
+            "rounded",
+            "square"
+          ],
+          "description": "Resting shape of buttons, chips and the navigation indicator."
+        }
+      }
+    },
+    "components": {
+      "type": "object",
+      "description": "Per-component looks. Anything left out stays Elbert's own.",
+      "additionalProperties": false,
+      "properties": {
+        "card": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            },
+            "padding": {
+              "description": "Inner padding.",
+              "oneOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 200
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 200
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 200
+                  },
+                  "minItems": 4,
+                  "maxItems": 4
+                }
+              ]
+            }
+          }
+        },
+        "songRow": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            },
+            "hoverColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background while the pointer is over it."
+            },
+            "activeColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background while this is the track playing."
+            },
+            "padding": {
+              "description": "Inner padding.",
+              "oneOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 200
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 200
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 200
+                  },
+                  "minItems": 4,
+                  "maxItems": 4
+                }
+              ]
+            },
+            "gap": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 64,
+              "description": "Space between the artwork and the text."
+            },
+            "coverSize": {
+              "type": "number",
+              "minimum": 16,
+              "maximum": 160,
+              "description": "Artwork size."
+            },
+            "coverRadius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Artwork corner radius."
+            }
+          }
+        },
+        "albumCard": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            }
+          }
+        },
+        "artistCard": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            }
+          }
+        },
+        "playerBar": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            }
+          }
+        },
+        "sidebar": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            }
+          }
+        },
+        "dock": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            }
+          }
+        },
+        "dialog": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            }
+          }
+        },
+        "sheet": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            }
+          }
+        },
+        "menu": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            }
+          }
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            }
+          }
+        },
+        "chip": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            }
+          }
+        },
+        "navigationBar": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Corner radius in logical pixels."
+            },
+            "color": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Background colour."
+            },
+            "borderColor": {
+              "$ref": "#/definitions/colorRef",
+              "description": "Border colour."
+            },
+            "borderWidth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 12,
+              "description": "Border width. Without a colour the border is transparent."
+            }
+          }
+        }
+      }
+    },
+    "strings": {
+      "type": "object",
+      "description": "Replacement text, by key (80 characters at most).",
+      "additionalProperties": false,
+      "properties": {
+        "app.name": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "app.byline": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "nav.home": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "nav.search": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "nav.albums": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "nav.artists": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "nav.songs": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "nav.playlists": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "nav.statistics": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "nav.createPlaylist": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "home.recentlyPlayed": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "player.notPlaying": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "player.selectTrack": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "song.nowPlaying": {
+          "type": "string",
+          "maxLength": 80
+        }
+      }
+    },
+    "templates": {
+      "type": "object",
+      "description": "Templates that draw a component's body. Elbert keeps its behaviour.",
+      "additionalProperties": false,
+      "properties": {
+        "songRow": {
+          "type": "object",
+          "required": [
+            "ui",
+            "widget"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "ui": {
+              "type": "string",
+              "description": "A library from the manifest's \"ui\"."
+            },
+            "widget": {
+              "type": "string",
+              "description": "A widget that library declares. Not named like a core or Elbert widget."
+            }
+          }
+        },
+        "albumCard": {
+          "type": "object",
+          "required": [
+            "ui",
+            "widget"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "ui": {
+              "type": "string",
+              "description": "A library from the manifest's \"ui\"."
+            },
+            "widget": {
+              "type": "string",
+              "description": "A widget that library declares. Not named like a core or Elbert widget."
+            }
+          }
+        }
+      }
+    },
+    "background": {
+      "type": "object",
+      "required": [
+        "ui",
+        "widget"
+      ],
+      "description": "A backdrop drawn behind every page.",
+      "additionalProperties": false,
+      "properties": {
+        "ui": {
+          "type": "string",
+          "description": "A library from the manifest's \"ui\"."
+        },
+        "widget": {
+          "type": "string"
+        },
+        "dim": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How far the surface colour is laid back over it."
+        }
+      }
+    }
+  }
+}

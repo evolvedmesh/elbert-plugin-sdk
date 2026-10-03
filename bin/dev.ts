@@ -21,6 +21,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { ServerWebSocket } from 'bun';
+import { themeFiles } from './theme';
 
 // biome-ignore lint/suspicious/noExplicitAny: the manifest is untrusted JSON.
 type Manifest = Record<string, any>;
@@ -80,16 +81,20 @@ export async function dev(o: DevOptions) {
       }
       const changed: string[] = [];
       changed.push(...staticFiles(o.root, m, outputs));
-      const result = await Bun.build({
-        root: o.root,
-        entrypoints: [path.resolve(o.root, o.entry)],
-        format: 'iife',
-        target: 'browser',
-        sourcemap: 'external',
-        naming: m.entry,
-        // Failures come back in result.logs; a throw would end the loop.
-        throw: false,
-      });
+      // A theme has no code, so nothing to bundle; its files were just written.
+      const result =
+        m.type === 'theme'
+          ? { success: true, logs: [], outputs: [] }
+          : await Bun.build({
+              root: o.root,
+              entrypoints: [path.resolve(o.root, o.entry)],
+              format: 'iife',
+              target: 'browser',
+              sourcemap: 'external',
+              naming: m.entry,
+              // Failures come back in result.logs; a throw would end the loop.
+              throw: false,
+            });
       if (!result.success) {
         return fail(result.logs.map(formatBuildLog).join('\n\n') || 'The build failed.');
       }
@@ -246,7 +251,7 @@ function staticFiles(root: string, m: Manifest, outputs: Outputs): string[] {
     if (outputs.write(rel, bytes)) changed.push(rel);
   };
   put('elbert-plugin.json', new TextEncoder().encode(`${JSON.stringify(m, null, 2)}\n`));
-  for (const p of Object.values(m.ui ?? {}) as string[]) {
+  for (const p of [...(Object.values(m.ui ?? {}) as string[]), ...themeFiles(root, m)]) {
     const abs = path.join(root, p);
     if (fs.existsSync(abs)) put(p, fs.readFileSync(abs));
   }
