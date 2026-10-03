@@ -1,7 +1,31 @@
 # The `elbert` API
 
 `types/elbert.d.ts` is the contract; this page explains how the pieces fit and what the types do
-not say. Every call into the host returns a promise and may reject with an `ElbertError` whose
+not say. For short worked examples start with the [cookbook](cookbook.md).
+
+## Find the call you need
+
+| I want to...                                          | Use                                                        | Needs        |
+| ----------------------------------------------------- | ---------------------------------------------------------- | ------------ |
+| Run code when the plugin starts / stops               | `elbert.onActivate`, `elbert.onDeactivate`                 |              |
+| Add a page and open it                                | `ui.page`, `ui.setRoutes`, `ui.navigate`                   |              |
+| Add a sidebar entry (and a phone dock)                | `ui.setNavigation`                                         |              |
+| Put a page in Settings                                | `ui.setSettings`                                           |              |
+| Add an item to a song's ⋯ menu                        | `ui.setTrackActions`                                       |              |
+| Show a toast, ask yes/no, ask for text, pick a file   | `ui.toast`, `ui.confirm`, `ui.prompt`, `ui.pickFiles`      |              |
+| Open a page in a bottom sheet                         | `ui.sheet`                                                 |              |
+| Remember something                                    | `storage.get/set`                                          |              |
+| Keep a password or token                              | `secrets.get/set`                                          |              |
+| Call a web API / download a file                      | `http.request`, `http.download`                            | `network`    |
+| Read or write files, unpack an archive                | `fs.*`                                                     | `storage` for paths outside the plugin's own folders |
+| Play a stream or a library track, control the queue   | `player.play`, `player.next`, ...                          | `player`     |
+| Know what is playing                                  | `player.state`, `player.onChange`, `player.onTick`         | `player`     |
+| Read the library, add a downloaded file               | `library.*`                                                | `library`    |
+| Create or update a playlist                           | `playlists.upsertLinked`                                   | `playlists`  |
+| Supply lyrics for your streams                        | `lyrics.provide`                                           | `lyrics`     |
+| Read or add to listening history                      | `history.*`                                                | `history`    |
+| Run a program                                         | `process.run`, `process.start`                             | `process`    |
+| Keep my state across dev reloads                      | `page.state`, `dev.persist`, `dev.restore`                 |              | Every call into the host returns a promise and may reject with an `ElbertError` whose
 `code` names the reason: `permission_denied`, `bad_args`, `not_found`, `network`, `timeout`,
 `http_<status>`, `not_allowed`, `stopped`, `unknown_method`, `host_error`. The codes are part of
 the API.

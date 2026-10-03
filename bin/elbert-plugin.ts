@@ -2,6 +2,7 @@
 
 // elbert-plugin — build, check, pack and live-develop Elbert plugins.
 //
+//   elbert-plugin init    [dir] [--theme] [--id com.example.x] [--name "X"]
 //   elbert-plugin build   [--entry src/index.ts] [--out dist] [--minify]
 //   elbert-plugin dev     [--entry src/index.ts] [--out dist] [--open [route]]
 //                         [--port 7357] [--host 0.0.0.0] [--no-lan]
@@ -22,9 +23,12 @@ import path from 'node:path';
 import process from 'node:process';
 import { zipSync } from 'fflate';
 import { dev as devLoop } from './dev';
+import { init as scaffold } from './init';
+import { themeFiles, validateTheme } from './theme';
 
 const API_VERSION = 1;
 const PERMISSIONS = ['network', 'storage', 'process', 'player', 'library', 'playlists', 'lyrics', 'history'];
+const KINDS = ['plugin', 'theme'];
 const PLATFORMS = ['linux', 'windows', 'macos', 'android', 'ios'];
 const ID_PATTERN = /^[a-z0-9]+(?:[.-][a-z0-9]+)+$/;
 const SEMVER = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
@@ -37,12 +41,16 @@ const [, , command, ...rest] = process.argv;
 const flags = parseFlags(rest);
 const root = process.cwd();
 
-const commands: Record<string, () => unknown> = { build, dev, check, pack, version, help };
+const commands: Record<string, () => unknown> = { init, build, dev, check, pack, version, help };
 const run = commands[command] ?? help;
-Promise.resolve(run()).catch((e) => {
-  console.error(`elbert-plugin: ${e instanceof Error ? e.message : e}`);
-  process.exit(1);
-});
+// Through a promise so a command that throws synchronously (check) prints its
+// message like the rest, not a stack trace.
+Promise.resolve()
+  .then(run)
+  .catch((e) => {
+    console.error(`elbert-plugin: ${e instanceof Error ? e.message : e}`);
+    process.exit(1);
+  });
 
 function parseFlags(args: string[]): Flags {
   const out: Flags = { _: [] };
@@ -61,9 +69,25 @@ function parseFlags(args: string[]): Flags {
   return out;
 }
 
+function init() {
+  const result = scaffold({
+    dir: flags._[0] ?? '.',
+    theme: Boolean(flags.theme),
+    id: typeof flags.id === 'string' ? flags.id : undefined,
+    name: typeof flags.name === 'string' ? flags.name : undefined,
+    sdk: typeof flags.sdk === 'string' ? flags.sdk : undefined,
+    force: Boolean(flags.force),
+  });
+  const here = path.relative(process.cwd(), result.dir);
+  console.log(`✓ Created ${flags.theme ? 'theme' : 'plugin'} "${result.name}" (${result.id}) in ${here || '.'}/`);
+  for (const f of result.files) console.log(`    ${f}`);
+  console.log(`\nNext:\n${here ? `  cd ${here}\n` : ''}  bun install\n  bun run dev     # builds, rebuilds on save, prints how to load it in Elbert`);
+}
+
 function help() {
   console.log(`elbert-plugin <command>
 
+  init     Create a working plugin project (or a theme with --theme) in [dir]
   build    Bundle the plugin into dist/ (manifest, code, templates, assets)
   dev      Build, then rebuild on every change. Templates reload in place in
            Elbert, code changes restart the plugin and reopen its pages, and
@@ -74,6 +98,8 @@ function help() {
   pack     Zip dist/ into <id>-<version>.elbx, ready to install
   version  Set the manifest's version (used by release tooling)
 
+init:    [dir]  (default: here)   --theme   --id <com.example.x>   --name <Name>
+         --force  scaffold into a non-empty folder (never overwrites a file)
 Options: --entry <file> (default src/index.ts, then src/index.js)
          --out <dir> (default dist)   --minify   --to <dir> (pack)
 dev:     --open [route]  navigate a connected Elbert there (default: the
@@ -105,7 +131,19 @@ function validate(m: Manifest): string[] {
   if (!str('version') || !SEMVER.test(m.version)) problems.push('"version" must be semver, like 1.2.0');
   if (!Number.isInteger(m.apiVersion) || m.apiVersion < 1) problems.push('"apiVersion" must be a positive integer');
   else if (m.apiVersion > API_VERSION) problems.push(`"apiVersion" ${m.apiVersion} is newer than this SDK knows (${API_VERSION})`);
-  if (!str('entry')) problems.push('"entry" is required (the bundled file, e.g. plugin.js)');
+  const kind = m.type ?? 'plugin';
+  if (!KINDS.includes(kind)) problems.push(`"type" must be "plugin" or "theme" (got ${JSON.stringify(m.type)})`);
+  if (kind === 'theme') {
+    // A theme is data: nothing that implies code or access belongs in one.
+    for (const k of ['entry', 'android', 'migrate']) {
+      if (m[k] !== undefined) problems.push(`a theme cannot have "${k}" — themes run no code`);
+    }
+    if ((m.permissions ?? []).length) problems.push('a theme cannot ask for permissions — it can only change how Elbert looks');
+    problems.push(...validateTheme(root, m));
+  } else {
+    if (!str('entry')) problems.push('"entry" is required (the bundled file, e.g. plugin.js)');
+    if (m.theme !== undefined) problems.push('"theme" is only for packages of type "theme"');
+  }
   for (const p of m.permissions ?? []) {
     if (!PERMISSIONS.includes(p)) problems.push(`unknown permission "${p}" (known: ${PERMISSIONS.join(', ')})`);
   }
@@ -259,7 +297,7 @@ function copyStatic(m: Manifest) {
   const out = outDir();
   fs.mkdirSync(out, { recursive: true });
   fs.writeFileSync(path.join(out, 'elbert-plugin.json'), `${JSON.stringify(m, null, 2)}\n`);
-  for (const p of Object.values(m.ui ?? {}) as string[]) {
+  for (const p of [...(Object.values(m.ui ?? {}) as string[]), ...themeFiles(root, m)]) {
     fs.mkdirSync(path.dirname(path.join(out, p)), { recursive: true });
     fs.copyFileSync(path.join(root, p), path.join(out, p));
   }
@@ -278,7 +316,8 @@ async function build() {
     }
   }
   copyStatic(m);
-  if (!(await bundle(m))) throw new Error('The build failed.');
+  // A theme has no code to bundle.
+  if (m.type !== 'theme' && !(await bundle(m))) throw new Error('The build failed.');
   console.log(`✓ built ${path.relative(root, outDir()) || '.'}/`);
   return m;
 }
@@ -289,7 +328,7 @@ function dev() {
   return devLoop({
     root,
     outDir: outDir(),
-    entry: entryPoint(),
+    entry: readManifest().type === 'theme' ? '' : entryPoint(),
     check,
     readManifest,
     port,

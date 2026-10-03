@@ -4,6 +4,10 @@ Every plugin has an `elbert-plugin.json` at its root. Elbert parses it strictly:
 an unknown permission refuses the install with a message naming the problem, rather than
 half-loading a plugin. `bunx elbert-plugin check` applies the same rules.
 
+`bunx elbert-plugin init` writes a manifest with a `$schema` line pointing at
+`node_modules/@evolvedmesh/elbert-plugin-sdk/schemas/manifest.schema.json`, so editors complete and
+check it as you type. The schema also knows the rules that differ between a plugin and a theme.
+
 ```json
 {
   "id": "com.example.radio-browser",
@@ -33,7 +37,9 @@ half-loading a plugin. `bunx elbert-plugin check` applies the same rules.
 | `name`                    | yes      | Shown in Settings.                                                                                                                                                                                                |
 | `version`                 | yes      | Semver, `1.2.0` or `1.2.0-beta.1`. Release tooling sets it with `elbert-plugin version`.                                                                                                                          |
 | `apiVersion`              | yes      | The plugin API version you wrote against (currently `1`). A plugin that needs a newer API than the running Elbert implements is refused; an older one keeps running, because the API only grows within a version. |
-| `entry`                   | yes      | The bundled JavaScript file, relative to the plugin root (`plugin.js`).                                                                                                                                           |
+| `type`                    | no       | `plugin` (default) runs code. `theme` changes how Elbert looks and runs none; see [themes.md](themes.md).                                                                                                          |
+| `entry`                   | plugins  | The bundled JavaScript file, relative to the plugin root (`plugin.js`). A theme has none.                                                                                                                         |
+| `theme`                   | themes   | A theme's `theme.json`, relative to the plugin root.                                                                                                                                                              |
 | `description`, `author`   | no       | Shown in Settings.                                                                                                                                                                                                |
 | `icon`                    | no       | A Lucide icon name for the Plugins list. Defaults to `puzzle`.                                                                                                                                                    |
 | `ui`                      | no       | Maps a **library name** to a `.rfwtxt` path. Routes and settings refer to a widget as `library:Widget`, and one template can `import library;` another.                                                           |
@@ -42,7 +48,10 @@ half-loading a plugin. `bunx elbert-plugin check` applies the same rules.
 | `android.runtimePackages` | no       | Packages of companion APKs that carry native programs; see [runtime-packs.md](runtime-packs.md).                                                                                                                  |
 | `migrate`                 | no       | One-time adoption of state the app kept before the feature became a plugin; see below.                                                                                                                            |
 
-All paths (`entry`, every `ui` value) must stay inside the plugin: no leading `/`, no `..`, no
+A **theme** (`"type": "theme"`) is data only, so Elbert refuses one that has `entry`, `android` or
+`migrate`, or that asks for any `permissions`.
+
+All paths (`entry`, `theme`, every `ui` value) must stay inside the plugin: no leading `/`, no `..`, no
 drive letters.
 
 ## `migrate`

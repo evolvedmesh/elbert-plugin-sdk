@@ -1215,6 +1215,87 @@ LogBox(text: data.logs, maxHeight: 220.0)
 
 ---
 
+## Decoration
+
+Gradients, glows, particles, waves, and wrappers that move their child. These are what a
+[theme's](themes.md) animated background is made of, and any plugin page can use them too. Each one
+animates itself from its arguments - there is no clock, arithmetic or logic in a template - and
+stops when the app is not showing it or the system asks for reduced motion. Colours are roles
+(`primaryContainer`, `surface`, ...), so a decoration follows light, dark, AMOLED and the user's
+accent. Decoration widgets expand to fill the space they are given: put them in a `Stack` with
+`fit: "expand"`.
+
+### GradientFill
+
+A gradient filling its box.
+
+| Argument  | Type          | Default    | Meaning                                                                           |
+| --------- | ------------- | ---------- | --------------------------------------------------------------------------------- |
+| `kind`    | string        | `linear`   | `linear` (top to bottom), `radial` or `sweep`.                                    |
+| `colors`  | colour roles  | -          | Two or more colour roles. Fewer than two draws nothing.                           |
+| `stops`   | numbers       | even       | One 0..1 position per colour.                                                     |
+| `opacity` | number        | `1.0`      | Multiplies each colour's alpha.                                                   |
+| `angle`   | number        | `0.0`      | Starting rotation, in turns (linear and sweep).                                   |
+| `spin`    | number        | `0.0`      | Seconds one full turn takes; `0.0` keeps it still.                                |
+| `centerX`, `centerY` | numbers | `0.0` | Centre of a radial or sweep gradient, -1..1.                                      |
+| `radius`  | number        | `0.75`     | Radius of a radial gradient, as a fraction of the box.                            |
+
+### Orb
+
+A soft glowing circle that wanders around its resting place.
+
+| Argument           | Type        | Default   | Meaning                                                          |
+| ------------------ | ----------- | --------- | ---------------------------------------------------------------- |
+| `color`            | colour role | `primary` | Glow colour.                                                     |
+| `opacity`          | number      | `0.5`     | Strength at the centre.                                          |
+| `size`             | number      | `0.5`     | Diameter as a fraction of the box's shorter side.                |
+| `x`, `y`           | numbers     | `0.0`     | Resting place, -1..1 (-1 left/top, 1 right/bottom).              |
+| `driftX`, `driftY` | numbers     | `0.15`    | How far it wanders from there, in the same units.                |
+| `seconds`          | number      | `24.0`    | How long one lap takes.                                          |
+| `phase`            | number      | `0.0`     | Where in the lap it starts (0..1), so orbs don't move in step.   |
+
+### Particles
+
+Specks drifting upward and twinkling.
+
+| Argument  | Type        | Default     | Meaning                                         |
+| --------- | ----------- | ----------- | ----------------------------------------------- |
+| `color`   | colour role | `onSurface` | Colour.                                         |
+| `opacity` | number      | `0.6`       | Brightest a speck gets.                         |
+| `count`   | int         | `40`        | Number of specks, at most 300.                  |
+| `size`    | number      | `2.5`       | Largest radius in logical pixels.               |
+| `speed`   | number      | `0.03`      | Height of the box a speck rises per second.     |
+| `seed`    | int         | `7`         | Same seed, same arrangement.                    |
+
+### Waves
+
+Layered waves rolling along the bottom, one layer per colour.
+
+| Argument     | Type         | Default | Meaning                                                    |
+| ------------ | ------------ | ------- | ---------------------------------------------------------- |
+| `colors`     | colour roles | -       | One per layer, back to front.                              |
+| `opacity`    | number       | `0.35`  | Multiplies each colour's alpha.                            |
+| `baseline`   | number       | `0.65`  | How far down the first crest sits (0 top, 1 bottom).       |
+| `amplitude`  | number       | `0.04`  | Crest height as a fraction of the box.                     |
+| `wavelength` | number       | `0.8`   | Crest to crest, as a fraction of the box's width.          |
+| `seconds`    | number       | `14.0`  | Period of one swell.                                       |
+
+### Spin, Drift, Pulse
+
+Wrappers that move one `child`.
+
+| Widget  | Arguments                                                                                                                         |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `Spin`  | `seconds` (`30.0`, one full turn), `reverse` (`false`).                                                                           |
+| `Drift` | `dx`, `dy` (`0.1`, how far it floats, as a fraction of its own size), `seconds` (`20.0`).                                         |
+| `Pulse` | `minOpacity`/`maxOpacity` (`1.0`), `minScale`/`maxScale` (`1.0`), `seconds` (`6.0`): breathes between the low and high values.    |
+
+```
+Spin(seconds: 90.0, child: Pulse(seconds: 8.0, minOpacity: 0.3, maxOpacity: 0.7, child: Orb(color: "tertiary")))
+```
+
+---
+
 ## Template rules
 
 These fail at runtime, not when the template is parsed or checked.

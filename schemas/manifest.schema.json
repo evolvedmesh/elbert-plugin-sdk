@@ -1,0 +1,190 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Elbert plugin manifest (elbert-plugin.json)",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "version",
+    "apiVersion"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+$",
+      "description": "Lower-case reverse-DNS, like com.example.my-plugin. Never changes once published."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$",
+      "description": "Semver."
+    },
+    "apiVersion": {
+      "const": 1,
+      "description": "The plugin API version you wrote against."
+    },
+    "type": {
+      "enum": [
+        "plugin",
+        "theme"
+      ],
+      "default": "plugin",
+      "description": "A theme changes how Elbert looks and runs no code."
+    },
+    "description": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string",
+      "description": "A Lucide icon name."
+    },
+    "entry": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(^|[\\\\/])\\.\\.([\\\\/]|$))[^:]*$",
+      "description": "The bundled JavaScript file (plugins only)."
+    },
+    "theme": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(^|[\\\\/])\\.\\.([\\\\/]|$))[^:]*$",
+      "description": "A theme's theme.json (themes only)."
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^(?!/)(?!.*(^|[\\\\/])\\.\\.([\\\\/]|$))[^:]*$",
+        "description": "A path inside the package."
+      },
+      "description": "Library name -> .rfwtxt template file."
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "network",
+          "storage",
+          "process",
+          "player",
+          "library",
+          "playlists",
+          "lyrics",
+          "history"
+        ]
+      },
+      "uniqueItems": true,
+      "description": "Plugins only. Ask only for what you use."
+    },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "linux",
+          "windows",
+          "macos",
+          "android",
+          "ios"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "android": {
+      "type": "object",
+      "properties": {
+        "runtimePackages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "migrate": {
+      "type": "object",
+      "properties": {
+        "settingsKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "secureKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "playlistLinks": {
+          "type": "boolean"
+        },
+        "legacySources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "anyOf": [
+    {
+      "properties": {
+        "type": {
+          "const": "theme"
+        }
+      },
+      "required": [
+        "type",
+        "theme"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "entry"
+            ]
+          },
+          {
+            "required": [
+              "android"
+            ]
+          },
+          {
+            "required": [
+              "migrate"
+            ]
+          },
+          {
+            "required": [
+              "permissions"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "plugin"
+        }
+      },
+      "required": [
+        "entry"
+      ],
+      "not": {
+        "required": [
+          "theme"
+        ]
+      }
+    }
+  ]
+}

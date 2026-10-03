@@ -1,0 +1,56 @@
+{
+  "seed": "#8B6CFF",
+  "colors": {
+    "light": {
+      "tertiary": "#B26A00",
+      "tertiaryContainer": "#FFDDB3"
+    },
+    "dark": {
+      "tertiary": "#FFB95C",
+      "tertiaryContainer": "#4A2C00"
+    },
+    "amoled": {
+      "surfaceContainerLow": "#0A0714",
+      "surfaceContainer": "#120D1F",
+      "surfaceContainerHigh": "#1A1429"
+    }
+  },
+  "typography": {
+    "fontFamily": "Space Grotesk"
+  },
+  "shapes": {
+    "scale": 1.25,
+    "buttons": "pill",
+    "radii": {
+      "medium": 14
+    }
+  },
+  "background": {
+    "ui": "background",
+    "widget": "Aurora",
+    "dim": 0.15
+  },
+  "components": {
+    "card": {
+      "borderColor": "outlineVariant",
+      "borderWidth": 1
+    },
+    "sidebar": {
+      "radius": 32
+    },
+    "albumCard": {
+      "radius": 28
+    }
+  },
+  "strings": {
+    "app.byline": "after dark",
+    "home.recentlyPlayed": "On repeat",
+    "player.notPlaying": "Quiet for now"
+  },
+  "templates": {
+    "songRow": {
+      "ui": "rows",
+      "widget": "DuskSongRow"
+    }
+  }
+}

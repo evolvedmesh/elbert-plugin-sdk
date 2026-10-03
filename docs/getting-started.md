@@ -1,50 +1,60 @@
 # Getting started
 
-An Elbert plugin is one JavaScript file plus declarative UI templates and a manifest. Elbert runs
-the JavaScript in a sandboxed engine (QuickJS-ng, ES2023) and renders the templates with its own
-widgets, so a plugin's pages follow the user's theme without any styling code.
+You can make two kinds of thing for Elbert, and they share the same tools, the same project shape and
+the same live-reload loop:
 
-You need [Bun](https://bun.sh) 1.3 or newer and an Elbert build with plugin support. Bun is the
-whole toolchain: package manager, the CLI's runtime and the bundler.
+|                | A **plugin**                                                       | A **theme**                                                                |
+| -------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Adds           | Pages, navigation, settings, song-menu actions, streams, lyrics    | Colours, fonts, corners, text, how rows and cards look, an animated backdrop |
+| Written in     | TypeScript (one bundled file) plus declarative UI templates        | JSON plus, optionally, UI templates. No code at all                        |
+| Asks the user for | Permissions it lists (network, player, library...)              | Nothing. It cannot run code or reach anything                              |
+| Go to          | [Make a plugin](#make-a-plugin)                                    | [Make a theme](#make-a-theme)                                              |
 
-## Create a project
+Both ship as one `.elbx` file the user installs by dropping it on Elbert, opening it, or pasting your
+GitHub repository's address.
+
+You need [Bun](https://bun.sh) 1.3 or newer and an Elbert build with plugin support. Bun is the whole
+toolchain: package manager, the CLI's runtime and the bundler.
+
+## Make a plugin
 
 ```shell
-mkdir my-plugin; cd my-plugin
-bun init -y
-bun add -d @evolvedmesh/elbert-plugin-sdk typescript @biomejs/biome
+bunx @evolvedmesh/elbert-plugin-sdk init hello       # creates ./hello
+cd hello
+bun install
+bun run dev
 ```
 
-`tsconfig.json`:
+`init` writes a project that already builds and loads:
 
-```json
-{
-  "compilerOptions": {
-    "target": "ES2023",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "noEmit": true,
-    "lib": ["ES2023"],
-    "types": ["@evolvedmesh/elbert-plugin-sdk"]
+```
+hello/
+  elbert-plugin.json   the manifest: id, name, version, permissions
+  src/index.ts         your code: registers a page, a route and a nav entry
+  ui/hello.rfwtxt      the page's look, as a template
+  tsconfig.json        types for the `elbert` global
+  package.json         scripts: dev, build, check, pack
+```
+
+Pass `--id com.you.hello` and `--name "Hello"` to choose them (the id is a lower-case reverse-DNS name
+and **can never change** once published). The files, in full:
+
+`src/index.ts`:
+
+```ts
+elbert.ui.page('hello', {
+  open: async () => ({ greeting: 'Hello from a plugin' }),
+  events: {
+    again: () => elbert.ui.toast('Hello again'),
   },
-  "include": ["src"]
-}
-```
+});
 
-`elbert-plugin.json` (see [manifest.md](manifest.md)):
-
-```json
-{
-  "id": "com.example.hello",
-  "name": "Hello",
-  "version": "1.0.0",
-  "apiVersion": 1,
-  "icon": "hand",
-  "entry": "plugin.js",
-  "ui": { "hello": "ui/hello.rfwtxt" },
-  "permissions": []
-}
+elbert.onActivate(async () => {
+  await elbert.ui.setNavigation({
+    destinations: [{ label: 'Hello', icon: 'hand', route: '/hello' }],
+  });
+  await elbert.ui.setRoutes([{ path: '/hello', page: 'hello', widget: 'hello:HelloPage' }]);
+});
 ```
 
 `ui/hello.rfwtxt`:
@@ -69,47 +79,53 @@ widget HelloPage = ScrollPage(
 );
 ```
 
-`src/index.ts`:
+The page controller (`elbert.ui.page`) is the code, the template is the look, and a route ties them
+together: `hello:HelloPage` means the widget `HelloPage` in the library the manifest's `ui` map calls
+`hello`. Widget names, argument names and role names are in [widgets.md](widgets.md); a wrong argument
+fails when the page opens, not at build time, so check them against that file.
 
-```ts
-elbert.ui.page('hello', {
-  open: async () => ({ greeting: 'Hello from a plugin' }),
-  events: {
-    again: () => elbert.ui.toast('Hello again'),
-  },
-});
+Next, pick what you want to build and use the [cookbook](cookbook.md): load a list from the web, play a
+stream, remember settings, add a song-menu action, open detail pages.
 
-elbert.onActivate(async () => {
-  await elbert.ui.setNavigation({
-    destinations: [{ label: 'Hello', icon: 'hand', route: '/hello' }],
-  });
-  await elbert.ui.setRoutes([{ path: '/hello', page: 'hello', widget: 'hello:HelloPage' }]);
-});
-```
-
-Widget names, argument names and role names are in [widgets.md](widgets.md); check them against that
-file, because a wrong argument fails when the page opens, not at build time.
-
-## Build and load it
+## Make a theme
 
 ```shell
-bunx elbert-plugin dev        # build, rebuild on every change, print how to connect
+bunx @evolvedmesh/elbert-plugin-sdk init night-owl --theme
+cd night-owl
+bun install
+bun run dev
 ```
 
-It prints two ways to load the plugin:
+```
+night-owl/
+  elbert-plugin.json   the manifest, with "type": "theme"
+  theme.json           the look: colours, fonts, corners, components, text
+  ui/background.rfwtxt an animated backdrop (optional; delete it and its theme.json entry to skip)
+```
+
+Open `theme.json`, change `"seed"` to another colour and save: Elbert repaints within a second. Your
+editor completes and checks `theme.json` as you type, because the file points at the SDK's JSON Schema.
+Everything a theme can change, with examples, is in [themes.md](themes.md).
+
+## Load it in Elbert
+
+`bun run dev` builds into `dist/`, rebuilds on every save, and prints how to load it. Two ways:
 
 - **On this computer**: in Elbert open **Settings → Plugins → Developer → Load development
-  folder** and pick the `dist/` folder it names. Allow the permissions the plugin asks for. Elbert
-  remembers the folder, so you only do this once.
+  folder** and pick the `dist/` folder it names. For a plugin, allow the permissions it asks for. A
+  theme then appears under **Settings → Appearance → Look**. Elbert remembers the folder, so you only
+  do this once.
 - **On a phone or another computer** on the same network: **Settings → Plugins → Developer →
   Connect to a dev server**, then type the address and the six-digit pairing code `dev` printed.
-  The plugin runs there until you disconnect. A "DEV" badge stays at the top of every page while it
-  is connected. Paired devices stay paired across restarts of `dev` for a day.
+  It runs there until you disconnect, and a "DEV" badge stays at the top of every page. Paired
+  devices stay paired across restarts of `dev` for a day.
 
-From then on, every save reloads the plugin, and how depends on what you changed:
+## The edit loop
 
-- **A template** (`.rfwtxt`): re-parsed in place in about a second. Open pages redraw with the
-  data they already have, and the plugin keeps running.
+From then on every save reloads your work in Elbert, and how depends on what you changed:
+
+- **A template** (`.rfwtxt`) or **`theme.json`**: re-read in place in about a second. Open pages
+  redraw with the data they already have, and the plugin keeps running.
 - **Code**: the plugin restarts and Elbert reopens the pages that were open, with the same route
   and parameters and the same navigation stack underneath. Each page's `page.state` is carried
   over and `page.restored` is true, so `open` can show what it had instead of fetching it again
@@ -141,14 +157,35 @@ Plugin reloads don't need it.
 Keep `open` fast. Return the initial data immediately and load the rest asynchronously with
 `page.set`, so the page appears at once with a loading state.
 
+## Troubleshooting
+
+| You see                                                              | It means                                                                                                  |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `check` says `"x" is not a colour role` / `is not a component`        | A typo in `theme.json`. The message lists the valid names.                                                |
+| `check` says a manifest field is missing                             | Elbert is strict by design; the message names the field. `$schema` in the manifest completes it.          |
+| The plugin page is blank or shows a red box                          | A template problem. The overlay inside the page says `file:line:column`; the `dev` terminal prints it too. |
+| A widget shows but ignores an argument                               | A wrong argument name or type is ignored, not an error. Compare with [widgets.md](widgets.md).             |
+| `permission_denied` in the log                                       | The call needs a permission the manifest doesn't list, or the user hasn't allowed it ([permissions.md](permissions.md)). |
+| Nothing happens after a code change                                  | The build failed; the last good one keeps running. The `dev` terminal and the page overlay show why.       |
+| The theme doesn't appear in Appearance                               | It must be switched on in Settings → Plugins.                                                              |
+| Appearance says the theme has a problem                              | `theme.json` or a template stopped passing Elbert's checks (the message names it). The last good version stays on screen until you fix it. |
+| `Maximum call stack`, or a call "timed out"                          | One call into your plugin may run about ten seconds. Break long loops into awaited steps.                  |
+
+The plugin's log (Settings → Plugins → the plugin → Log) has everything it printed with
+`console.log`, plus uncaught errors.
+
 ## Where to go next
 
-- [manifest.md](manifest.md) — every manifest field.
-- [api.md](api.md) — the `elbert` global.
-- [templates.md](templates.md) and [widgets.md](widgets.md) — writing the UI.
-- [permissions.md](permissions.md) — what each permission allows.
-- [packaging.md](packaging.md) — building and shipping a `.elbx`, and publishing it so users can
+- [cookbook.md](cookbook.md) - short answers to "how do I...".
+- [themes.md](themes.md) - everything a theme can change.
+- [manifest.md](manifest.md) - every manifest field.
+- [api.md](api.md) - the `elbert` global, grouped by what you want to do.
+- [templates.md](templates.md) and [widgets.md](widgets.md) - writing the UI.
+- [permissions.md](permissions.md) - what each permission allows.
+- [packaging.md](packaging.md) - building and shipping a `.elbx`, and publishing it so users can
   install from your GitHub repository's URL.
-- [runtime-packs.md](runtime-packs.md) — running native programs on Android.
-- `examples/radio-browser` — a small complete plugin: navigation with its own phone dock, pages,
+- [runtime-packs.md](runtime-packs.md) - running native programs on Android.
+- `examples/radio-browser` - a small complete plugin: navigation with its own phone dock, pages,
   streams, a settings page, a track action and storage.
+- `examples/dusk-theme` - a complete theme: palette, corners, text, a custom song row and an
+  animated background.

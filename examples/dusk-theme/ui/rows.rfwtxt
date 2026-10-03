@@ -1,0 +1,53 @@
+// How a track row looks. Elbert keeps the behaviour - tapping plays, the
+// pointer highlights, right-click and the menu button open the song's menu -
+// and this is only what the row looks like.
+//
+// data.title, data.artist, data.album, data.duration  text
+// data.current, data.playing, data.hover, data.narrow  true/false
+// data.remote, data.downloaded, data.hasCover          true/false
+import core;
+import elbert;
+
+widget DuskSongRow = Padding(
+  padding: [14.0, 8.0, 6.0, 8.0],
+  child: Row(
+    crossAxisAlignment: "center",
+    children: [
+      // Round artwork, a little larger while the pointer is over the row.
+      switch data.hover {
+        true: TrackCover(size: 50.0, radius: 25.0),
+        default: TrackCover(size: 46.0, radius: 23.0),
+      },
+      SizedBox(width: 14.0),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: "start",
+          mainAxisSize: "min",
+          children: [
+            ThemedText(
+              text: data.title,
+              style: "titleMedium",
+              weight: 600,
+              maxLines: 1,
+              color: switch data.current {
+                true: "primary",
+                default: "onSurface",
+              },
+            ),
+            ThemedText(
+              text: data.artist,
+              style: "bodyMedium",
+              color: "onSurfaceVariant",
+              maxLines: 1,
+            ),
+          ],
+        ),
+      ),
+      SizedBox(width: 10.0),
+      switch data.current {
+        true: NowPlaying(size: 18.0),
+        default: ThemedText(text: data.duration, style: "labelMedium", color: "onSurfaceVariant"),
+      },
+    ],
+  ),
+);
