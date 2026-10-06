@@ -75,6 +75,26 @@ Installed packages live in `<appSupport>/plugins/packages/<id>` (replaced wholes
 plugin data in `plugins/data/<id>` (kept across updates). The registry in
 `plugins/registry.json` records which plugins are enabled and what each was granted.
 
+## Getting listed in the marketplace
+
+Elbert's **Discover** page (Settings → Plugins → *Browse the marketplace*, or "Discover plugins" in the
+sidebar) lists public GitHub repositories. There is no registry to submit to; a repository lists itself:
+
+1. Add the topic **`elbert-plugin`** (or **`elbert-theme`** for a theme) to the repository: the gear next
+   to **About** on its GitHub page. `init` reminds you in the generated README.
+2. Keep it **public** and attach the `.elbx` to a **release** (see below). A repository without a package on
+   a release can be found but not opened: Elbert checks for the package when someone taps it, and says
+   there is nothing to install yet.
+3. Write a good **description** (the one-line "About" text shows on the card) and a good **README**. The
+   README is shown on the plugin's page, rendered as Markdown. Relative image paths work; put screenshots
+   in the repository. Images that GitHub renders from SVG (some badges) are left out.
+4. Optional but useful: more topics (`radio`, `lyrics`, `dark`...). The commonest ones become filter chips.
+
+New topics can take a little while to show up in GitHub's search, and Elbert refreshes its list at most every
+few hours, so a freshly tagged repository may not appear straight away.
+
+The marketplace is ordered by stars by default, and shows your repository's owner avatar and last-updated time.
+
 ## Versioning and releases
 
 **Attach the `.elbx` to every GitHub release.** That is all "install from GitHub" needs: users

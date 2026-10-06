@@ -245,6 +245,12 @@ bun run check    # validate the manifest${kind === 'theme' ? ', theme.json' : ''
 bun run pack     # writes ${c.id}-1.0.0.elbx, ready to install or attach to a release
 \`\`\`
 
+## Publishing
+
+Attach the \`.elbx\` to every GitHub release, and add the topic \`${kind === 'theme' ? 'elbert-theme' : 'elbert-plugin'}\`
+to the repository (the gear next to **About**) so it shows up in Elbert's **Discover** page. Give the
+repository a description and keep this README informative: Elbert shows both.
+
 Documentation: \`node_modules/@evolvedmesh/elbert-plugin-sdk/${docs}\`.
 `;
 }

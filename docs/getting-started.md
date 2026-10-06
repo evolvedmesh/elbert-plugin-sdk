@@ -12,6 +12,8 @@ the same live-reload loop:
 
 Both ship as one `.elbx` file the user installs by dropping it on Elbert, opening it, or pasting your
 GitHub repository's address.
+Add the topic `elbert-plugin` (or `elbert-theme`) to your repository and it is also listed in Elbert's
+**Discover** page: see [Getting listed in the marketplace](packaging.md#getting-listed-in-the-marketplace).
 
 You need [Bun](https://bun.sh) 1.3 or newer and an Elbert build with plugin support. Bun is the whole
 toolchain: package manager, the CLI's runtime and the bundler.
