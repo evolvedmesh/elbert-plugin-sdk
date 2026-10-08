@@ -31,8 +31,7 @@ messages must be Conventional Commits. Don't commit or push unless asked.
     Change a template and re-run the smoke test: `init` into a temp dir with `--sdk file:<this repo>`,
     `bun install`, `bun run check`, `bun run pack`.
   - `version`.
-- `examples/radio-browser` is the sample plugin. It deliberately does not use Apple Music; the
-  real Apple Music plugin is `../elbert-apple-music`. It shows a section with its own phone dock,
+- `examples/radio-browser` is the sample plugin. It shows a section with its own phone dock,
   pages and templates, streams, a settings page, a track action and plugin storage. Elbert's
   `test/plugin_host_test.dart` runs it, so keep it building.
 - **Themes** are packages with `"type": "theme"`: no `entry`, no permissions, a `theme.json` instead.
