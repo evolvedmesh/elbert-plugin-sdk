@@ -515,7 +515,7 @@ SizedBox(width: 170.0, child: AlbumCard(title: data.title, subtitle: data.artist
 
 ### CardRail
 
-A horizontal shelf of album cards, bled to the screen edge on a phone.
+A horizontal shelf of album cards, bled to the screen edge on a phone. On desktop and tablet an arrow button sits on the artwork at each end while there is more to scroll that way (right from the start, left once scrolled); a click scrolls about 60% of the shelf's width. A shelf that fits has none, and a phone scrolls by touch.
 
 | Argument       | Type   | Default     | Meaning                                                                                                                                                                              |
 | -------------- | ------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -569,7 +569,7 @@ HeroCard(title: "New this week", caption: "Fresh stations picked for you", cover
 
 ### HeroStrip
 
-The top-of-page strip: a hero card followed by shortcut cards in one horizontally scrolling row. On a phone only the hero is shown. With no `pins` the hero spans the page; with neither hero nor pins nothing is drawn.
+The top-of-page strip: a hero card followed by shortcut cards in one horizontally scrolling row. On a phone only the hero is shown. With no `pins` the hero spans the page; with neither hero nor pins nothing is drawn. The row has the same scroll arrows as `CardRail` on desktop.
 
 | Argument | Type  | Default | Meaning                             |
 | -------- | ----- | ------- | ----------------------------------- |
@@ -584,7 +584,7 @@ HeroStrip(hero: data.hero, pins: data.pins, onHero: event "hero" {}, onPin: even
 
 ### PinStrip
 
-A horizontal row of compact shortcut chips (small cover, name beside it).
+A horizontal row of compact shortcut chips (small cover, name beside it). Has the same scroll arrows as `CardRail` on desktop.
 
 | Argument | Type  | Default | Meaning                                        |
 | -------- | ----- | ------- | ---------------------------------------------- |
