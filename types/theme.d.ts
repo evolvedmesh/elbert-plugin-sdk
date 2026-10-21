@@ -10,6 +10,8 @@
  * ```
  */
 
+import type { ThemeLayouts } from './layout';
+
 /** `#RGB`, `#RRGGBB` or `#AARRGGBB`. */
 export type ThemeColor = string;
 
@@ -192,4 +194,14 @@ export interface ThemeFile {
     /** How far the surface colour is laid back over the background, 0 - 1. */
     dim?: number;
   };
+
+  /**
+   * How Home, the sidebar and the phone dock are arranged (see docs/layouts.md):
+   * which blocks Home shows, in what rows, how big and in what colours; the
+   * sidebar's groups and tabs; the dock's tabs. Write it by hand, or arrange
+   * Elbert with Settings → Layout and paste in the file it exports. A user who
+   * customises a part replaces the theme's for that part; any part left out is
+   * Elbert's own.
+   */
+  layouts?: ThemeLayouts;
 }

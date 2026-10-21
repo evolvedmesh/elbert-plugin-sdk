@@ -5,10 +5,11 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { validateLayout } from '../bin/layout';
 import { validateTheme } from '../bin/theme';
 
 const root = path.join(import.meta.dir, '..');
-const docs = ['docs/cookbook.md'];
+const docs = ['docs/cookbook.md', 'docs/layouts.md'];
 const blocks: string[] = [];
 for (const doc of docs) {
   const text = fs.readFileSync(path.join(root, doc), 'utf8');
@@ -36,6 +37,23 @@ if (recipeProblems.length) {
   process.exit(1);
 }
 
+// Every layout in docs/layouts.md (whole files, or "home"/"sidebar"/"dock"
+// fragments) must pass the rules Elbert applies.
+const layoutDoc = fs.readFileSync(path.join(root, 'docs/layouts.md'), 'utf8');
+const layoutProblems: string[] = [];
+let layoutCount = 0;
+for (const m of layoutDoc.matchAll(/```json\n([\s\S]*?)```/g)) {
+  layoutCount++;
+  const text = m[1].trim();
+  const json = JSON.parse(text.startsWith('{') ? text : `{${text}}`);
+  layoutProblems.push(...validateLayout(json).map((p) => `layout example ${layoutCount}: ${p.where} ${p.why}`));
+}
+if (layoutProblems.length) {
+  console.error(layoutProblems.join('\n'));
+  console.error('docs/layouts.md has a layout that fails the layout rules.');
+  process.exit(1);
+}
+
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'elbert-docs-'));
 const body = blocks.map((b, i) => `function recipe${i}() {\n${b}\n}\nvoid recipe${i};`).join('\n\n');
 fs.writeFileSync(path.join(tmp, 'recipes.ts'), `import type {} from ${JSON.stringify(path.join(root, 'types/elbert'))};\n${body}\n`);
@@ -59,7 +77,9 @@ const proc = Bun.spawnSync(['bunx', 'tsc', '-p', tmp], { cwd: root, stdout: 'pip
 fs.rmSync(tmp, { recursive: true, force: true });
 if (proc.exitCode !== 0) {
   console.error(proc.stdout.toString() || proc.stderr.toString());
-  console.error('docs/cookbook.md has code that does not compile against types/elbert.d.ts.');
+  console.error('docs/cookbook.md or docs/layouts.md has code that does not compile against types/elbert.d.ts.');
   process.exit(1);
 }
-console.log(`✓ ${blocks.length} cookbook snippets compile, ${recipeCount} theme recipes pass the theme rules.`);
+console.log(
+  `✓ ${blocks.length} doc snippets compile, ${recipeCount} theme recipes pass the theme rules, ${layoutCount} layout examples pass the layout rules.`,
+);

@@ -30,14 +30,16 @@ cd my-plugin && bun install && bun run dev                    # builds, rebuilds
 - [The `elbert` API](docs/api.md)
 - [Writing templates](docs/templates.md)
 - [Widget reference](docs/widgets.md)
-- [Writing a theme](docs/themes.md)
+- [Writing a theme](docs/themes.md) - styling Elbert, and arranging it
+- [Layouts](docs/layouts.md) - the format behind Home, the sidebar and the dock, for themes and plugin pages
 - [Permissions](docs/permissions.md)
 - [Packaging and releasing](docs/packaging.md)
 - [Runtime packs for native programs on Android](docs/runtime-packs.md)
 
-`types/elbert.d.ts` is the API contract and `types/theme.d.ts` describes `theme.json`. `schemas/` has
-JSON Schemas for `elbert-plugin.json` and `theme.json`, which `init` wires up so your editor completes
-and checks them.
+`types/elbert.d.ts` is the API contract, `types/theme.d.ts` describes `theme.json` and
+`types/layout.d.ts` the layout format. `schemas/` has JSON Schemas for `elbert-plugin.json`,
+`theme.json` and layout files (exported from Elbert's Settings → Layout), which `init` wires up so your
+editor completes and checks them.
 `examples/radio-browser` is a small complete plugin and `examples/dusk-theme` a complete theme.
 
 ## Developing the SDK

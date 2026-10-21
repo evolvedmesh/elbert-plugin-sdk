@@ -7,6 +7,20 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+  BLOCKS,
+  COMMON_BLOCK_FIELDS,
+  DISPLAYS,
+  LAYOUT_VERSION,
+  NAV_SOURCES,
+  PIN_KINDS,
+  PLUGIN_ONLY_BLOCKS,
+  RANGES,
+  SHORTCUT_ACTIONS,
+  SIZES,
+  SURFACES,
+} from '../bin/layout';
+import { LUCIDE_NAMES } from '../bin/lucide-names';
 import { COLOR_ROLES, COMPONENT_RANGES, COMPONENTS, RADIUS_TOKENS, SLOTS, STRING_KEYS } from '../bin/theme';
 
 const dir = path.join(import.meta.dir, '..', 'schemas');
@@ -70,10 +84,187 @@ const templateRef = {
   },
 };
 
+// ---- The layout format (bin/layout.ts) -------------------------------------
+
+const range = ([minimum, maximum]: readonly [number, number], description?: string) => ({ type: 'number', minimum, maximum, description });
+const intRange = ([minimum, maximum]: readonly [number, number], description?: string) => ({ type: 'integer', minimum, maximum, description });
+const route = { type: 'string', pattern: '^/', description: 'A route, starting with "/".' };
+const icon = { $ref: '#/definitions/lucideIcon' };
+
+const BLOCK_DESCRIPTIONS: Record<string, string> = {
+  greeting: 'Good morning, and the date.',
+  nowPlaying: "What's playing, or a way to start.",
+  weekStats: 'Time listened this week, a bar per day.',
+  libraryTiles: 'Song, album, artist and playlist counts.',
+  otherServices: "Plugins' sections as chips.",
+  forYou: 'Quick Mix, Favourites and Infinity Radio (with a Subsonic server).',
+  recentlyPlayed: 'Albums, playlists and mixes played recently.',
+  recentlyAdded: 'The newest albums.',
+  topArtists: "This week's top artists.",
+  pinned: 'Albums, artists, songs and playlists chosen by hand.',
+  playlists: "The user's playlists.",
+  smartPlaylists: "Elbert's smart playlists.",
+  topTracks: "This week's most-played songs.",
+  shortcut: 'One card that opens a route or starts a mix. Needs "route" or "action".',
+  note: 'A heading and some words.',
+  spacer: 'Empty space.',
+  cards: 'Plugin pages only: tiles the plugin supplies.',
+  widget: "Plugin pages only: one of the plugin's templates.",
+};
+
+const BLOCK_FIELDS: Record<string, unknown> = {
+  id: { type: 'string', minLength: 1, description: 'Unique among blocks.' },
+  span: range(RANGES.block.span, "Share of the row's width (a flex weight; Elbert's editor writes twelfths)."),
+  visibleOn: { type: 'array', items: { enum: SIZES }, description: 'Page widths it shows at: compact < 600, medium < 900, expanded.' },
+  style: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      accent: { ...hex, description: "Re-seeds the block's colours." },
+      surface: { enum: SURFACES, description: 'The surface under the block.' },
+      radius: range(RANGES.radius, 'Corner radius.'),
+    },
+  },
+  title: { type: 'string' },
+  text: { type: 'string' },
+  limit: intRange(RANGES.limit, 'How many to show.'),
+  tileSize: range(RANGES.block.tileSize, "Tile width; Elbert's size for the page width when left out."),
+  display: { enum: DISPLAYS, description: 'One scrolling row, or a wrapping grid.' },
+  items: {
+    type: 'array',
+    items: {
+      type: 'object',
+      minProperties: 1,
+      maxProperties: 1,
+      additionalProperties: false,
+      properties: Object.fromEntries(PIN_KINDS.map((k) => [k, { type: 'string', minLength: 1 }])),
+    },
+    description: 'Pinned things: {"album": key}, {"artist": name}, {"track": id}, {"playlist": id}, {"smartPlaylist": id}.',
+  },
+  icon,
+  route,
+  action: { enum: SHORTCUT_ACTIONS },
+  size: range(RANGES.block.size, 'Height.'),
+  cards: {
+    type: 'array',
+    items: {
+      type: 'object',
+      required: ['title'],
+      additionalProperties: false,
+      properties: {
+        title: { type: 'string', minLength: 1 },
+        subtitle: { type: 'string' },
+        image: { type: 'string', description: 'An http(s) image URL.' },
+        icon: { type: 'string', description: 'A Lucide icon name, shown without an image.' },
+        route,
+        event: { type: 'string', description: "Sent to the page controller's events[event], with args." },
+        args: { type: 'object' },
+      },
+    },
+  },
+  widget: { type: 'string', pattern: ':', description: '"library:Widget", a library from the manifest\'s "ui".' },
+};
+
+function blockSchema(type: string) {
+  const fields = [...COMMON_BLOCK_FIELDS, ...BLOCKS[type]].filter((f) => f !== 'type');
+  return {
+    type: 'object',
+    description: BLOCK_DESCRIPTIONS[type],
+    required: type === 'widget' ? ['type', 'widget'] : ['type'],
+    additionalProperties: false,
+    properties: { type: { const: type }, ...Object.fromEntries(fields.map((f) => [f, BLOCK_FIELDS[f]])) },
+  };
+}
+
+const rowSchema = (block: string) => ({
+  type: 'object',
+  required: ['blocks'],
+  additionalProperties: false,
+  description: 'Blocks side by side; below stackBelow they stack.',
+  properties: {
+    id: { type: 'string', minLength: 1, description: 'Unique among rows.' },
+    blocks: { type: 'array', minItems: 1, items: { $ref: `#/definitions/${block}` } },
+    spaceBefore: range(RANGES.row.spaceBefore, 'Space above the row (default 28). A hidden row hands its space on.'),
+    stackBelow: range(RANGES.row.stackBelow, 'Page width below which the blocks stack.'),
+    gap: range(RANGES.row.gap, 'Space between blocks side by side (default 16).'),
+    stackGap: range(RANGES.row.stackGap, 'Space between stacked blocks (default 12).'),
+    height: range(RANGES.row.height, 'Height while side by side; blocks size themselves when left out.'),
+  },
+});
+
+const tab = {
+  type: 'object',
+  required: ['route'],
+  additionalProperties: false,
+  properties: {
+    id: { type: 'string', minLength: 1 },
+    route,
+    label: { type: 'string', minLength: 1, description: "Left out, the destination's own name." },
+    icon,
+    color: hex,
+  },
+};
+
+const layoutDefinitions = {
+  lucideIcon: { enum: [...LUCIDE_NAMES], description: 'A Lucide icon name (lucide.dev/icons).' },
+  layoutBlock: {
+    oneOf: Object.keys(BLOCKS)
+      .filter((t) => !PLUGIN_ONLY_BLOCKS.includes(t))
+      .map(blockSchema),
+  },
+  layoutRow: rowSchema('layoutBlock'),
+  layout: {
+    type: 'object',
+    additionalProperties: false,
+    description: 'How Home, the sidebar and the phone dock are arranged. Any part left out is the next layout in line.',
+    properties: {
+      $schema: { type: 'string' },
+      elbertLayout: { const: LAYOUT_VERSION },
+      home: {
+        type: 'object',
+        additionalProperties: false,
+        properties: { rows: { type: 'array', items: { $ref: '#/definitions/layoutRow' } } },
+      },
+      sidebar: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          groups: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                id: { type: 'string', minLength: 1 },
+                label: { type: 'string' },
+                source: { enum: NAV_SOURCES, description: 'Rows added after its own tabs.' },
+                limit: intRange(RANGES.groupLimit),
+                items: { type: 'array', items: tab },
+              },
+            },
+          },
+        },
+      },
+      dock: {
+        type: 'object',
+        additionalProperties: false,
+        properties: { items: { type: 'array', minItems: RANGES.dock[0], maxItems: RANGES.dock[1], items: tab } },
+      },
+    },
+  },
+};
+
+const layout = {
+  $schema: 'http://json-schema.org/draft-07/schema#',
+  title: 'Elbert layout (exported from Settings → Layout, or a theme\'s "layouts")',
+  definitions: { hex: hexDef, ...layoutDefinitions },
+  $ref: '#/definitions/layout',
+};
+
 const theme = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   title: 'Elbert theme (theme.json)',
-  definitions: { hex: hexDef, colorRef: colorRefDef, colorSet: colorSetDef },
+  definitions: { hex: hexDef, colorRef: colorRefDef, colorSet: colorSetDef, ...layoutDefinitions },
   type: 'object',
   properties: {
     $schema: { type: 'string' },
@@ -145,6 +336,10 @@ const theme = {
         dim: { type: 'number', minimum: 0, maximum: 1, description: 'How far the surface colour is laid back over it.' },
       },
     },
+    layouts: {
+      $ref: '#/definitions/layout',
+      description: 'How Home, the sidebar and the dock are arranged. Paste in a file exported from Settings → Layout, or write one.',
+    },
   },
 };
 
@@ -196,7 +391,7 @@ const manifest = {
   ],
 };
 
-const outputs: Record<string, unknown> = { 'theme.schema.json': theme, 'manifest.schema.json': manifest };
+const outputs: Record<string, unknown> = { 'theme.schema.json': theme, 'layout.schema.json': layout, 'manifest.schema.json': manifest };
 const stale: string[] = [];
 fs.mkdirSync(dir, { recursive: true });
 for (const [file, schema] of Object.entries(outputs)) {

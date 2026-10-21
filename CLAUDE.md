@@ -43,6 +43,16 @@ messages must be Conventional Commits. Don't commit or push unless asked.
   `ELBERT_SAMPLE_THEME` points at its `dist/`. A theme is data only, so don't add anything to
   `theme.json` that needs logic or access; the decoration widgets (`GradientFill`, `Orb`,
   `Particles`, `Waves`, `Spin`, `Drift`, `Pulse`) are in `docs/widgets.md` under "Decoration".
+- **Layouts** (`docs/layouts.md`): Home, the sidebar and the dock as data. Themes ship them as
+  `layouts` in `theme.json`; plugin routes with `layout: true` render `data.blocks` with them.
+  `types/layout.d.ts` and `bin/layout.ts` (the validator `check` runs on a theme's `layouts`, and
+  whose tables generate the schemas) mirror the host's `lib/models/page_layout.dart`. Change them
+  together, including the block catalogue, the ranges and the error wording.
+  - `bin/lucide-names.ts` is **generated** from the host's `lucide_icon_table.dart` by
+    `bun scripts/gen-lucide-names.ts`. Rerun it when Elbert upgrades its Lucide package; an icon
+    `check` accepts must be one Elbert accepts.
+  - `bun run docs:check` validates every JSON example in `docs/layouts.md` against the layout rules,
+    and compiles its TypeScript.
 - `docs/` is the developer documentation: getting started, the manifest, the API, templates, the
   widget reference, themes, permissions, packaging and runtime packs. `docs/widgets.md` is derived from
   `../elbert/lib/plugins/ui/widgets/lib_*.dart`; when a widget or argument changes there, change
