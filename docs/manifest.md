@@ -46,6 +46,7 @@ check it as you type. The schema also knows the rules that differ between a plug
 | `permissions`             | no       | What the plugin asks to do; see [permissions.md](permissions.md). Unknown names are refused.                                                                                                                      |
 | `platforms`               | no       | Any of `linux`, `windows`, `macos`, `android`, `ios`. Empty or absent means all. Elsewhere the plugin cannot be installed, and an existing install is kept but never started.                                     |
 | `android.runtimePackages` | no       | Packages of companion APKs that carry native programs; see [runtime-packs.md](runtime-packs.md).                                                                                                                  |
+| `android.runtimePacks`    | no       | Where Elbert fetches a runtime pack APK from for `native.installRuntime`: `{ package, url (https), sha256, versionCode }` each.                                                                                       |
 | `migrate`                 | no       | One-time adoption of state the app kept before the feature became a plugin; see below.                                                                                                                            |
 
 A **theme** (`"type": "theme"`) is data only, so Elbert refuses one that has `entry`, `android` or

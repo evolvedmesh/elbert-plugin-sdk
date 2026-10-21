@@ -105,6 +105,36 @@
           "items": {
             "type": "string"
           }
+        },
+        "runtimePacks": {
+          "type": "array",
+          "description": "Runtime pack APKs Elbert downloads and installs on request (native.installRuntime).",
+          "items": {
+            "type": "object",
+            "required": [
+              "package",
+              "url",
+              "sha256",
+              "versionCode"
+            ],
+            "properties": {
+              "package": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https://"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{64}$"
+              },
+              "versionCode": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
         }
       }
     },

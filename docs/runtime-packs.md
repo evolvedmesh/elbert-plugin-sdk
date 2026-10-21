@@ -63,9 +63,26 @@ List the pack's package name in the manifest:
 }
 ```
 
-Then resolve it and run its programs:
+To have Elbert fetch and install the pack for the user, also pin the APK where it is published:
+
+```json
+{
+  "android": {
+    "runtimePackages": ["com.example.myplugin.runtime"],
+    "runtimePacks": [
+      { "package": "com.example.myplugin.runtime", "url": "https://example.com/pack-1.4.0.apk", "sha256": "<64 hex digits>", "versionCode": 14 }
+    ]
+  }
+}
+```
+
+`versionCode` is the one the APK carries; release tooling fills `url` and `sha256` in once the APK is
+built. Then install on demand, resolve it and run its programs:
 
 ```ts
+// A no-op when an equal or newer pack is installed. Otherwise Android shows its install
+// prompt (once; the user must confirm) and this resolves when they have answered it.
+await elbert.native.installRuntime('com.example.myplugin.runtime'); // needs `process`
 const pack = await elbert.native.runtime('com.example.myplugin.runtime');
 if (!pack) throw new Error('Install the runtime pack first.');
 if (!pack.extracted) throw new Error('The pack was built with compressed libraries.');
@@ -74,6 +91,12 @@ const exe = elbert.fs.join(pack.nativeLibraryDir, 'libtool.so');
 const proc = await elbert.process.start(exe, ['--serve'], { env: { TOOL_HOME: (await elbert.fs.paths()).data } });
 proc.onOutput((line) => console.log(line));
 ```
+
+`native.installRuntime` downloads the APK, checks its SHA-256 and that it is the named package, and
+hands it to Android's package installer. Android always asks the user to confirm, and on first use
+also to allow Elbert to install apps; the call throws (`not_allowed`) after opening that setting, so
+call it again once the user has flipped it. Updating a pack Elbert installed needs no second tap on
+Android 12 and newer.
 
 `native.runtime` returns `null` when the pack is not installed and on every non-Android platform.
 `process` on Android may exec only files inside a pack directory resolved this way, and a plugin's
