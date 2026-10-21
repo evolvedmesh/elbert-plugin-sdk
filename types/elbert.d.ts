@@ -242,6 +242,14 @@ export interface Native {
     versionName: string | null;
     versionCode: number;
   } | null>;
+  /**
+   * Android: fetches the pack the manifest pins in `android.runtimePacks` and hands it to
+   * Android's installer, unless an equal or newer one is installed. The user confirms on
+   * Android's own prompt, so this resolves only once they have answered it; it throws when they
+   * decline, or when Elbert is not yet allowed to install apps (Android opens that setting).
+   * Needs `process`. Resolves false on every other platform.
+   */
+  installRuntime(packageName: string): Promise<boolean>;
 }
 
 // ---- Player & library -------------------------------------------------------------

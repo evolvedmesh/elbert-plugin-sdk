@@ -369,7 +369,26 @@ const manifest = {
     ui: { type: 'object', additionalProperties: path_, description: 'Library name -> .rfwtxt template file.' },
     permissions: { type: 'array', items: { enum: PERMISSIONS }, uniqueItems: true, description: 'Plugins only. Ask only for what you use.' },
     platforms: { type: 'array', items: { enum: ['linux', 'windows', 'macos', 'android', 'ios'] }, uniqueItems: true },
-    android: { type: 'object', properties: { runtimePackages: { type: 'array', items: { type: 'string' } } } },
+    android: {
+      type: 'object',
+      properties: {
+        runtimePackages: { type: 'array', items: { type: 'string' } },
+        runtimePacks: {
+          type: 'array',
+          description: 'Runtime pack APKs Elbert downloads and installs on request (native.installRuntime).',
+          items: {
+            type: 'object',
+            required: ['package', 'url', 'sha256', 'versionCode'],
+            properties: {
+              package: { type: 'string' },
+              url: { type: 'string', pattern: '^https://' },
+              sha256: { type: 'string', pattern: '^[0-9a-fA-F]{64}$' },
+              versionCode: { type: 'integer', minimum: 1 },
+            },
+          },
+        },
+      },
+    },
     migrate: {
       type: 'object',
       properties: {

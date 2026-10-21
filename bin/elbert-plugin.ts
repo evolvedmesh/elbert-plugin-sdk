@@ -150,6 +150,13 @@ function validate(m: Manifest): string[] {
   for (const p of m.platforms ?? []) {
     if (!PLATFORMS.includes(p)) problems.push(`unknown platform "${p}" (known: ${PLATFORMS.join(', ')})`);
   }
+  for (const [i, pack] of (m.android?.runtimePacks ?? []).entries()) {
+    const at = `android.runtimePacks[${i}]`;
+    if (typeof pack?.package !== 'string' || !pack.package) problems.push(`${at}: "package" is required`);
+    if (typeof pack?.url !== 'string' || !pack.url.startsWith('https://')) problems.push(`${at}: "url" must be https`);
+    if (typeof pack?.sha256 !== 'string' || !/^[0-9a-fA-F]{64}$/.test(pack.sha256)) problems.push(`${at}: "sha256" must be 64 hex digits`);
+    if (!Number.isInteger(pack?.versionCode) || pack.versionCode < 1) problems.push(`${at}: "versionCode" must be a positive integer`);
+  }
   const safe = (p: unknown): p is string => typeof p === 'string' && !p.startsWith('/') && !p.split(/[\\/]/).includes('..') && !p.includes(':');
   if (m.entry && !safe(m.entry)) problems.push('"entry" must be a path inside the plugin');
   for (const [name, p] of Object.entries(m.ui ?? {})) {
