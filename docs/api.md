@@ -206,6 +206,10 @@ await elbert.ui.setRoutes([
 
 - A **route** is `path` plus a controller (`page`) and a template (`widget`, `library:Widget`).
   `:name` segments arrive in `page.params`; the query string in `page.query`.
+- Or, in place of `widget`, `layout: true`: the page is drawn from `data.blocks` in the
+  [layout format](layouts.md#plugin-pages-built-from-blocks) Home uses. That gives you Elbert's rails,
+  pinned items, notes, shortcuts and `cards`, plus your own templates as `widget` blocks.
+  `{ path: '/radio', page: 'home', layout: true }`.
 - Paths are absolute and must start with a segment of your own. `search`, `albums`, `artists`,
   `songs`, `playlists`, `stats`, `settings`, `folders` and `plugins` are reserved. A route may also be one of
   Elbert's own pages: `{ path: '/radio/settings', host: 'settings' }` mounts the Settings index

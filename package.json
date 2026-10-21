@@ -11,6 +11,9 @@
     },
     "./theme": {
       "types": "./types/theme.d.ts"
+    },
+    "./layout": {
+      "types": "./types/layout.d.ts"
     }
   },
   "bin": {

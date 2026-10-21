@@ -1,7 +1,9 @@
 # Writing templates
 
 Plugin pages are [Remote Flutter Widgets](https://pub.dev/packages/rfw) (RFW) text libraries,
-`.rfwtxt` files. A template is **data**: it cannot run code, and it cannot pass a colour. It names
+`.rfwtxt` files. (A page that is mostly rails, cards and notes can skip templates: route it with
+`layout: true` and describe it as [blocks](layouts.md#plugin-pages-built-from-blocks). You can still
+embed a template in it as a `widget` block.) A template is **data**: it cannot run code, and it cannot pass a colour. It names
 widgets, wires their arguments to `data.*`, and names events that call back into the plugin.
 
 The widgets come from three libraries:

@@ -18,6 +18,16 @@ declare global {
   };
 }
 
+export type { CardsBlock, LayoutCard, PageBlock, PageRow, WidgetBlock } from './layout';
+
+import type { PageRow } from './layout';
+
+/** The data of a page routed with `layout: true`: its rows of blocks, plus anything its `widget` blocks read. */
+export interface LayoutPageData {
+  blocks: PageRow[];
+  [key: string]: any;
+}
+
 /** Anything that survives a trip through JSON. */
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json | undefined };
 
@@ -426,6 +436,13 @@ export interface RouteSpec {
   page?: string;
   /** … and the template that renders it, `library:Widget`. */
   widget?: string;
+  /**
+   * … or, instead of `widget`, draw the page from blocks: the page's
+   * `data.blocks` (a {@link PageRow} list), in the layout format Home uses (docs/layouts.md).
+   * Elbert's own rails, pinned items, notes and shortcuts, plus `cards` and
+   * your templates as `widget` blocks. `page.set({ blocks })` redraws it.
+   */
+  layout?: boolean;
   /** Or one of Elbert's own pages: `settings` (the Settings index) / `settingsSection` (path ends in `:section`). */
   host?: 'settings' | 'settingsSection';
 }

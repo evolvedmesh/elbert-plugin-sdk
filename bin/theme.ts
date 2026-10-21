@@ -4,6 +4,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { validateLayout } from './layout';
 
 // biome-ignore lint/suspicious/noExplicitAny: theme.json is untrusted JSON, validated by hand below.
 type Json = Record<string, any>;
@@ -255,6 +256,11 @@ export function validateTheme(root: string, m: Json): string[] {
       }
     }
     if (bg.dim !== undefined) inRange('background.dim', bg.dim, 0, 1);
+  }
+
+  // How the pages are arranged: the layout format, checked as Elbert checks it.
+  if (t.layouts !== undefined) {
+    for (const p of validateLayout(t.layouts)) bad(p.where === 'layout' ? 'layouts' : `layouts.${p.where}`, p.why);
   }
   return problems;
 }

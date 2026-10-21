@@ -2,6 +2,8 @@
 
 A theme changes how Elbert looks: colours, fonts, every corner, how individual components are styled,
 the words on screen, how song rows and album cards are drawn, and an optional animated background.
+It can also change how Elbert is **arranged**: what Home shows and in what order, and what the sidebar
+and phone dock hold (see [Layouts](#layouts-arranging-the-pages)).
 It is a package like any plugin, with one difference that matters: **it contains no code.** A theme is
 `elbert-plugin.json` plus a `theme.json` of values and, for a background, a few `.rfwtxt`
 templates. Elbert never starts an engine for it, and it cannot ask for permissions - so it can
@@ -38,6 +40,24 @@ bunx elbert-plugin pack     # → com.example.my-theme-1.0.0.elbx
 ```
 
 `examples/dusk-theme` is a complete one.
+
+## Two ways to shape Elbert
+
+A theme can work on Elbert in two ways, and can use either or both:
+
+| | **Styling**: how things look | **Arranging**: what goes where |
+| --- | --- | --- |
+| In `theme.json` | `seed`, `colors`, `typography`, `shapes`, `components`, `strings`, `templates`, `background` | `layouts` |
+| Changes | The palette, type, corners, each component's surface, the text, how rows and tiles are drawn, the backdrop | Which blocks Home shows, in what rows, at what size and colour; the sidebar's groups and tabs; the dock |
+| How you make it | Written in `theme.json` (the schema completes every key), with `.rfwtxt` templates for slots and the background | **Designed in Elbert** with Settings → Layout and exported, **or** written by hand against `schemas/layout.schema.json` |
+
+Before layouts, a theme could only restyle Elbert's pages as they were. It couldn't move, add or
+remove anything. Now the arrangement is data too: you can lay Home out by dragging in Elbert itself,
+press **Export**, and paste the file into `layouts`. Either way it's still data, so a theme still
+runs no code and asks for no permissions.
+
+A user who customises a part (say, Home) keeps their version of that part. The rest of your
+layout still applies, and so does all your styling.
 
 ## The manifest
 
@@ -78,7 +98,10 @@ Everything is optional; a theme sets what it wants to change and leaves the rest
   },
   "strings": { "home.recentlyPlayed": "On repeat" },
   "templates": { "songRow": { "ui": "rows", "widget": "DuskSongRow" } },
-  "background": { "ui": "background", "widget": "Aurora", "dim": 0.15 }
+  "background": { "ui": "background", "widget": "Aurora", "dim": 0.15 },
+  "layouts": {
+    "dock": { "items": [{ "route": "/" }, { "route": "/search" }, { "route": "/stats" }, { "route": "/settings" }] }
+  }
 }
 ```
 
@@ -226,6 +249,46 @@ background is busy.
 The user can switch it off in Settings → Appearance → *Custom animated background*, which shows the
 plain surface instead.
 
+### Layouts: arranging the pages
+
+`layouts` is the [layout format](layouts.md): `home` (rows of blocks), `sidebar` (groups of tabs)
+and `dock` (2 to 5 tabs). Any of them can be left out, and a part you leave out stays Elbert's own.
+
+```json
+"layouts": {
+  "home": { "rows": [
+    { "blocks": [{ "type": "greeting" }], "spaceBefore": 0 },
+    { "blocks": [{ "type": "nowPlaying" }], "spaceBefore": 20 },
+    { "blocks": [
+      { "type": "shortcut", "title": "Shuffle everything", "action": "shuffleAll", "span": 6 },
+      { "type": "shortcut", "title": "Most played", "route": "/playlists/smart/most-played", "icon": "trending-up", "span": 6 }
+    ] },
+    { "blocks": [{ "type": "recentlyAdded", "title": "Fresh in", "tileSize": 160 }] }
+  ] }
+}
+```
+
+The easy way to write one is to design it in Elbert:
+
+1. Load your theme as a development folder.
+2. Arrange Home under **Settings → Layout → Home**, and the sidebar and dock under **Settings → Layout →
+   Sidebar and phone dock**. Drag blocks, resize them, give them colours.
+3. Press **Export** and paste the file into `layouts`. It's a complete layout, `"elbertLayout"` and all,
+   and that's fine to keep.
+4. Reset your own arrangement (**Reset all**) to see the theme's version, since a user's own layout always
+   wins over the theme's.
+
+Things to know:
+
+- Colours in a layout are fixed hex values (`style.accent` re-seeds a block's palette from one). Your
+  `colors` and `seed` still decide everything around them.
+- `pinned` items and `/albums/…` or `/playlists/<id>` tabs point at one user's library. Pins to
+  something not in the library are skipped, so don't ship them in a theme. Use blocks that fill
+  themselves (`recentlyAdded`, `topArtists`, `smartPlaylists`) and `shortcut`s.
+- Keep a group with `"source": "services"` in your sidebar, or a newly installed plugin will have
+  nowhere to appear.
+- `check` validates `layouts` exactly as Elbert will, including every icon name.
+
 ## Writing a background
 
 A background is a template, the same language as a plugin page (see [templates](templates.md)),
@@ -361,6 +424,28 @@ top of it).
 
 **Your own song row.** See [Templates](#templates-drawing-a-component-yourself) above and
 `examples/dusk-theme/ui/rows.rfwtxt`.
+
+**Rearrange as well as restyle.** Styling and layout together: a quieter Home that leads with
+shortcuts, and a three-tab dock.
+
+```json
+{
+  "seed": "#3D8A8A",
+  "shapes": { "scale": 0.75 },
+  "layouts": {
+    "home": { "rows": [
+      { "blocks": [{ "type": "greeting" }], "spaceBefore": 0 },
+      { "blocks": [
+        { "type": "shortcut", "title": "Shuffle all", "action": "shuffleAll", "span": 6 },
+        { "type": "shortcut", "title": "Favourites", "action": "favourites", "span": 6, "style": { "accent": "#E0457B" } }
+      ], "spaceBefore": 20, "stackBelow": 600 },
+      { "blocks": [{ "type": "recentlyPlayed", "limit": 8 }] },
+      { "blocks": [{ "type": "smartPlaylists" }] }
+    ] },
+    "dock": { "items": [{ "route": "/" }, { "route": "/search" }, { "route": "/playlists" }] }
+  }
+}
+```
 
 ## Packaging and updates
 
