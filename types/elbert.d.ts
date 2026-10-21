@@ -289,7 +289,12 @@ export interface LibraryTrack {
   durationMs: number;
   trackNumber: number | null;
   discNumber: number | null;
-  source: 'local' | 'subsonic' | 'plugin';
+  /**
+   * Where it plays from. `lan` is another Elbert's track, heard by listening
+   * along with it on the local network: a queue entry only, never in the
+   * library (like a plugin's stream).
+   */
+  source: 'local' | 'subsonic' | 'plugin' | 'lan';
   pluginId: string | null;
   isrc: string | null;
   hasLyrics: boolean;
