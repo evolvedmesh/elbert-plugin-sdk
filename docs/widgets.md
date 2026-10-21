@@ -317,17 +317,18 @@ SubNav(tabs: data.tabs, current: data.current)
 
 ### PageHeader
 
-A page title with optional icon-button actions, and a back button whenever there is something to go back to.
+A page title with an optional caption under it and actions beside it, and a back button whenever there is something to go back to. It is the same header Elbert's own Albums, Artists and Playlists pages use.
 
-| Argument   | Type   | Default | Meaning                                    |
-| ---------- | ------ | ------- | ------------------------------------------ |
-| `title`    | string | `""`    | The title.                                 |
-| `above`    | child  | none    | A full-width widget drawn above the title. |
-| `actions`  | list   | none    | Action items, drawn as icon buttons.       |
-| `onAction` | event  | none    | Payload `{ id }`.                          |
+| Argument   | Type   | Default | Meaning                                                                                                                                          |
+| ---------- | ------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `title`    | string | `""`    | The title.                                                                                                                                       |
+| `caption`  | string | none    | A line under the title, such as `"24 stations"`.                                                                                                 |
+| `above`    | child  | none    | A full-width widget drawn above the title.                                                                                                       |
+| `actions`  | list   | none    | Action items, drawn as labelled buttons (round icon buttons on a phone, with the label as tooltip). A `primary` action is filled and glows. |
+| `onAction` | event  | none    | Payload `{ id }`.                                                                                                                                |
 
 ```
-PageHeader(title: "Playlists", actions: data.actions, onAction: event "action" {})
+PageHeader(title: "Playlists", caption: data.count, actions: data.actions, onAction: event "action" {})
 ```
 
 ### SectionHeading
@@ -525,7 +526,7 @@ A horizontal shelf of album cards, bled to the screen edge on a phone. On deskto
 | `cardHeight`   | number | computed    | Explicit rail height; otherwise the width plus the title and subtitle block.                                                                                                         |
 | `titleLines`   | int    | `2`         | Maximum title lines.                                                                                                                                                                 |
 | `innerPadding` | number | `0`         | Extra horizontal padding inside the rail.                                                                                                                                            |
-| `spacing`      | number | `16`        | Gap between cards.                                                                                                                                                                   |
+| `spacing`      | number | `4`         | Gap between cards. Each card already has 8 of padding around its artwork (where its hover surface shows).                                                                            |
 | `onTap`        | event  | none        | Payload `{ index, id }`.                                                                                                                                                             |
 
 ```
@@ -917,7 +918,7 @@ ReorderableTrackList(items: data.editItems, removeLabel: "Remove from playlist",
 
 ### StickyHeader
 
-The detail-page header (cover, type label, title, subtitle, info columns, Play and Shuffle) that stays pinned as it collapses. A sliver; use it inside `ScrollPage`. It animates on the nearest `Stagger`.
+The detail-page header that stays pinned as it collapses: a large cover over a soft wash of its own colours with a glow in its accent, the type label, title, subtitle, info chips, Play, Shuffle and an optional ⋯ menu. Collapsed, a bar with the cover, title and the same menu. If scrolling stops half-way, it finishes collapsing or expanding, whichever is nearer. On a phone it is full-bleed: no card, and instead of the wash the cover itself runs across the top of the screen, edge to edge and up behind the status bar (through the space `ScrollPage`'s `topInset` leaves above it), fading into the page under the title and buttons. A sliver; use it inside `ScrollPage`. It animates on the nearest `Stagger`.
 
 | Argument         | Type   | Default | Meaning                                    |
 | ---------------- | ------ | ------- | ------------------------------------------ |
@@ -929,6 +930,8 @@ The detail-page header (cover, type label, title, subtitle, info columns, Play a
 | `onPlayAll`      | tap    | none    | Play button.                               |
 | `onShuffle`      | tap    | none    | Shuffle button.                            |
 | `onSubtitle`     | tap    | none    | Makes the subtitle tappable when bound.    |
+| `menu`           | list   | none    | ⋯ menu items: `id`, `label`, `icon`, `destructive` (drawn in red, after a divider). |
+| `onMenu`         | event  | none    | Payload `{ id }`. The menu shows only when this is bound. |
 | `back`           | bool   | `true`  | Show a back button.                        |
 | `topInset`       | bool   | `true`  | Pad the header below the shell's top bar.  |
 | `expanded`       | number | `380`   | Expanded height on wider layouts.          |
@@ -1167,11 +1170,11 @@ SettingsHeader(icon: "radio", title: "Radio Browser", description: "Stations com
 
 ### Segmented
 
-A segmented choice. Draws nothing when there are no options.
+A segmented choice: a pill track with a lit indicator that slides to the selected option, the same control as the view switcher on Elbert's library pages. Every segment is as wide as the widest. Draws nothing when there are no options.
 
 | Argument   | Type   | Default             | Meaning                                                 |
 | ---------- | ------ | ------------------- | ------------------------------------------------------- |
-| `options`  | list   | none                | Options: `id`, `label`, `icon` (optional).              |
+| `options`  | list   | none                | Options: `id`, `label`, `icon`, `tooltip`. Give a `label`, an `icon` or both; an icon-only option should have a `tooltip`. |
 | `selected` | string | first option's `id` | The `id` of the selected option.                        |
 | `onSelect` | event  | none                | Payload `{ id }`. The control is disabled when unbound. |
 
