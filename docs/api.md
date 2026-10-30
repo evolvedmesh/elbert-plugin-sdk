@@ -202,12 +202,12 @@ listening. The answer is
   "activeDays": 27, "longestStreak": 14,
   "topArtists": [{ "name": "…", "listenedMs": 0, "plays": 0, "tracks": 0 }],
   "topAlbums":  [{ "name": "…", "artist": "…", "listenedMs": 0, "plays": 0, "tracks": 0 }],
-  "topTracks":  [{ "title": "…", "artist": "…", "album": "…", "trackId": "applemusic-stream:123",
+  "topTracks":  [{ "title": "…", "artist": "…", "album": "…", "trackId": "example-stream:123",
                    "listenedMs": 0, "plays": 0 }],
   "buckets": [{ "label": "3", "startMs": 0, "listenedMs": 0, "plays": 0 }],
   "busiest": { "label": "3", "startMs": 0, "listenedMs": 0, "plays": 0 },
   "byHour": [0], "byWeekday": [0], "firstDayOfWeek": 1,
-  "bySource": { "local": 0, "Apple Music": 0 },
+  "bySource": { "local": 0, "Example Music": 0 },
   "firstPlayedMs": 0, "lastPlayedMs": 0 }
 ```
 
