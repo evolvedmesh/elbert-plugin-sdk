@@ -1055,6 +1055,90 @@ ChipPicker(options: data.years, selected: data.selected, onSelect: event "select
 
 ---
 
+## Story
+
+A "your year in music" page: full-size slides you scroll through, each of which animates when it arrives. A plugin writes ordinary templates and the host does the timing, so nothing in a slide runs before the slide is reached and every visit replays it.
+
+### StoryPager
+
+Vertical full-size pages, one per child, snapping to each. Put it in an `Expanded` (it takes whatever size its parent gives it). The wheel or a trackpad swipe moves one slide, as do touch swipes, ↑ ↓, Page Up/Down and Space; Home and End jump to the ends. A slim row of dots on the right edge shows where you are and jumps when tapped, and a chevron at the bottom of the first slide hints that there is more. A slide is built **only while it is the current one** (and while it scrolls away), inside its own entrance timeline: `SlideIn`, `Stagger`, `Reveal`, `CountUp` and `BarChart` inside it start when it becomes current, and start again on every return to it. Slides you have not reached cost nothing. With reduced motion on, slides change without animating.
+
+| Argument      | Type   | Default | Meaning                                                                                                                                      |
+| ------------- | ------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `children`    | list   | none    | The slides, in order. Give them a transparent background if you use `backgrounds`.                                                          |
+| `backgrounds` | list   | none    | Optional, one widget per slide, drawn behind the pager and **cross-faded as it scrolls**, so colour changes while the content slides. Fill them (a `GradientFill`, or a `Stack` of `Orb`s and `Particles`). |
+| `restartKey`  | string | none    | Changing it returns to the first slide and replays everything.                                                                               |
+| `showDots`    | bool   | `true`  | The dot rail.                                                                                                                                |
+| `onPage`      | event  | none    | A slide became the current one. Payload `{ index }`.                                                                                         |
+
+```
+StoryPager(
+  restartKey: data.year,
+  backgrounds: [
+    GradientFill(colors: ["primaryContainer", "surface"]),
+    GradientFill(kind: "radial", colors: ["tertiaryContainer", "surface"], centerY: -0.4),
+  ],
+  children: [
+    Padding(
+      padding: [28.0, 0.0, 28.0, 0.0],
+      child: Column(mainAxisAlignment: "center", crossAxisAlignment: "start", children: [
+        Reveal(child: ThemedText(text: "YOUR YEAR IN MUSIC", style: "labelLarge", color: "primary", letterSpacing: 2.0)),
+        SizedBox(height: 12.0),
+        CountUp(value: data.hours, suffix: " hr", size: 120.0, delayMs: 200),
+        Reveal(delayMs: 900, child: ThemedText(text: "of music, all year", style: "titleLarge")),
+      ]),
+    ),
+    Center(child: FitText(text: data.topArtist, size: 64.0, align: "center")),
+  ],
+)
+```
+
+### CountUp
+
+A big number that counts up from 0 when it appears - on arrival at a `StoryPager` slide, and again whenever `value` changes. Thousands separators, tabular figures, and it shrinks rather than overflow a narrow width.
+
+| Argument     | Type        | Default   | Meaning                                         |
+| ------------ | ----------- | --------- | ----------------------------------------------- |
+| `value`      | number      | `0`       | The number to land on (may have decimals).      |
+| `decimals`   | int         | `0`       | Places shown, 0 to 2.                           |
+| `prefix`, `suffix` | string | `""`    | Text before and after (`"~"`, `" hr"`).         |
+| `size`       | number      | `96`      | Font size.                                      |
+| `weight`     | int         | `800`     | Font weight, 100 to 900.                        |
+| `color`      | colour role | `primary` | Colour.                                         |
+| `align`      | string      | `start`   | `start`, `center` or `end`.                     |
+| `delayMs`    | int         | `0`       | Wait before counting, in real milliseconds.     |
+| `durationMs` | int         | `1400`    | How long the count takes.                       |
+
+### Reveal
+
+Fades its `child` in while it rises (and optionally grows) into place once it appears. Unlike `SlideIn`, which shares a page-wide timeline and is meant for delays under about half a second, `delayMs` is real milliseconds, so a slide can sequence its lines over several seconds.
+
+| Argument     | Type   | Default | Meaning                                                               |
+| ------------ | ------ | ------- | --------------------------------------------------------------------- |
+| `child`      | widget | none    | What to reveal.                                                       |
+| `delayMs`    | int    | `0`     | Wait before it starts.                                                |
+| `durationMs` | int    | `700`   | How long it takes.                                                    |
+| `dy`         | number | `0.08`  | How far below its place it starts, as a fraction of its own height.   |
+| `scale`      | number | `1.0`   | Starting scale; below 1 it grows into place.                          |
+
+### FitText
+
+Text that shrinks until it fits - one line by default - for a name of unknown length on a big slide.
+
+| Argument        | Type        | Default     | Meaning                                                     |
+| --------------- | ----------- | ----------- | ----------------------------------------------------------- |
+| `text`          | string      | `""`        | The text.                                                   |
+| `size`          | number      | `48`        | Largest font size.                                          |
+| `minSize`       | number      | `14`        | It will not shrink below this (then it ends in an ellipsis). |
+| `weight`        | int         | `800`       | Font weight.                                                |
+| `color`         | colour role | `onSurface` | Colour.                                                     |
+| `align`         | string      | `start`     | `start`, `center` or `end`.                                 |
+| `maxLines`      | int         | `1`         | Lines it may wrap to (1 to 6).                              |
+| `upper`         | bool        | `false`     | Upper-case it.                                              |
+| `letterSpacing` | number      | none        | Extra spacing.                                              |
+
+---
+
 ## Forms
 
 Inputs and the setup-flow shell. Text fields own their text on the host side and report it; a plugin that wants to clear or replace a field changes its `resetKey` along with its `value`.

@@ -24,6 +24,8 @@ not say. For short worked examples start with the [cookbook](cookbook.md).
 | Create or update a playlist                           | `playlists.upsertLinked`                                   | `playlists`  |
 | Supply lyrics for your streams                        | `lyrics.provide`                                           | `lyrics`     |
 | Read or add to listening history                      | `history.*`                                                | `history`    |
+| Summaries of Elbert's own listening (a month, a year) | `history.stats`, `history.periods`                         | `history`    |
+| Write listening time as the user prefers (hours/min)  | `stats.timeUnit`, `stats.onTimeUnitChange`                 |              |
 | Run a program                                         | `process.run`, `process.start`                             | `process`    |
 | Keep my state across dev reloads                      | `page.state`, `dev.persist`, `dev.restore`                 |              | Every call into the host returns a promise and may reject with an `ElbertError` whose
 `code` names the reason: `permission_denied`, `bad_args`, `not_found`, `network`, `timeout`,
@@ -186,6 +188,47 @@ still accepts are sent too (`history: false` sends them without adding them to E
 offer the two as separate choices, since sending alone puts nothing on Elbert's statistics); `history.lastFm()` returns `{ signedIn, acceptsSinceMs }` so you can
 say up front how many that will be. Last.fm refuses plays older than about two weeks, and that is
 true for every client.
+
+**Listening statistics.** Needs `history`. `history.stats({ period, provider? })` returns Elbert's
+own summary of one period, computed by the same code as its Statistics page, so you don't have to
+ship a year of rows through `query` to total them: `period` is `all`, `year-2026`, `month-2026-8`
+or `week-2026-9-14` (weeks start on the user's first day of the week and are named by their first
+day). It resolves `null` for anything that is not a period and an empty summary for a period with no
+listening. The answer is
+
+```json
+{ "period": "month-2026-8", "label": "August 2026",
+  "listenedMs": 31200000, "plays": 412, "uniqueTracks": 233, "uniqueArtists": 61, "uniqueAlbums": 79,
+  "activeDays": 27, "longestStreak": 14,
+  "topArtists": [{ "name": "…", "listenedMs": 0, "plays": 0, "tracks": 0 }],
+  "topAlbums":  [{ "name": "…", "artist": "…", "listenedMs": 0, "plays": 0, "tracks": 0 }],
+  "topTracks":  [{ "title": "…", "artist": "…", "album": "…", "trackId": "example-stream:123",
+                   "listenedMs": 0, "plays": 0 }],
+  "buckets": [{ "label": "3", "startMs": 0, "listenedMs": 0, "plays": 0 }],
+  "busiest": { "label": "3", "startMs": 0, "listenedMs": 0, "plays": 0 },
+  "byHour": [0], "byWeekday": [0], "firstDayOfWeek": 1,
+  "bySource": { "local": 0, "Example Music": 0 },
+  "firstPlayedMs": 0, "lastPlayedMs": 0 }
+```
+
+Each ranking holds the **top 25**, ordered by time listened (a listen counts for the album artist
+when there is one). `buckets` is a bar per day for a month or week, per month for a year (each
+carries the `period` it opens) and per year for `all`. `provider` restricts it to one plugin's
+listens, exactly as in `query`. Times are the time actually spent playing; `plays` counts listens
+that reached half the track or four minutes. `history.periods({ provider? })` lists which years and
+months have any listening - `{ years: [{ year, listenedMs, plays, months: [{ month, listenedMs,
+plays }] }], firstPlayedMs, lastPlayedMs }`, newest year first - so you know what can be asked
+for. Both arrived together with `elbert.stats`; on an older Elbert they are missing, so check
+`if (elbert.stats)` first.
+
+**Hours or minutes.** `stats.timeUnit()` returns the user's choice for writing listening time -
+`auto`, `hours` or `minutes` - the one setting behind Elbert's Statistics page, Home and Settings →
+Appearance. A plugin that shows listening time should follow it (`auto` means whatever unit each
+figure suits, as before): `hours` is one decimal and thousands separators (`412.5 hr`), `minutes`
+is whole minutes (`24,750 min`). `stats.onTimeUnitChange(fn)` (or
+`elbert.on('stats.timeUnit', e => e.unit)`) tells you when it changes, whoever changed it, so a
+page can redraw. `stats.setTimeUnit(unit)` changes it for everything; call it from a control the
+user pressed, not on your own.
 
 **Lyrics.** `lyrics.provide(fn)` supplies lyrics (LRC or plain text) for your own streams; Elbert
 asks you first for a track of yours. Return `null` for none.

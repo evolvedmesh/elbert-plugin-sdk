@@ -67,6 +67,7 @@ export interface Elbert {
 
   /** Subscribes to a host event. Returns an unsubscribe function. */
   on(event: 'app.lifecycle', fn: (e: { state: 'paused' | 'detached' }) => void): () => void;
+  on(event: 'stats.timeUnit', fn: (e: { unit: StatsTimeUnit }) => void): () => void;
   on(event: string, fn: (data: any) => void): () => void;
 
   /** The raw call underneath every API below. */
@@ -82,6 +83,12 @@ export interface Elbert {
   library: Library;
   playlists: Playlists;
   history: History;
+  /**
+   * The user's statistics preferences. Absent on an Elbert from before it
+   * existed: check `if (elbert.stats)` before using it (and `history.stats`,
+   * `history.periods`, which arrived with it).
+   */
+  stats?: Stats;
   lyrics: Lyrics;
   ui: Ui;
 }
@@ -420,6 +427,101 @@ export interface History {
   import(plays: PlayRecord[], opts?: { lastFm?: boolean; history?: boolean }): Promise<{ added: number; sentToLastFm: number }>;
   /** Whether Last.fm is signed in, and the oldest start time it still accepts. */
   lastFm(): Promise<{ signedIn: boolean; acceptsSinceMs: number }>;
+  /**
+   * Elbert's own statistics for one period, computed by Elbert from its log, so
+   * a year of listening never has to cross into the plugin as raw rows. `period`
+   * is `all`, `year-2026`, `month-2026-8` or `week-2026-9-14` (a week starts on
+   * the user's first day of the week and is named by its first day). `provider`
+   * restricts it to one plugin's listens, as in `query`. Resolves `null` for a
+   * period that is not one. Each ranking holds the top 25. Present when
+   * `elbert.stats` is.
+   */
+  stats?(opts: { period: string; provider?: string }): Promise<HistoryStats | null>;
+  /** Which years and months have any listening, to know what `stats` can be asked for. */
+  periods?(opts?: { provider?: string }): Promise<HistoryPeriods>;
+}
+
+/** One bar of a period's chart: a day of a month, a month of a year, a year of `all`. */
+export interface HistoryBucket {
+  /** `31` for a day, `J` for a month, `2026` for a year. */
+  label: string;
+  startMs: number;
+  listenedMs: number;
+  /** Listens that counted as a play (half the track, or four minutes). */
+  plays: number;
+  /** The period the bar opens (`month-2026-8`) - months and years only. */
+  period?: string;
+}
+
+/** What `history.stats` returns. Times are milliseconds; "time" is time actually spent playing. */
+export interface HistoryStats {
+  period: string;
+  /** `August 2026`, `2026`, `All time`. */
+  label: string;
+  listenedMs: number;
+  plays: number;
+  uniqueTracks: number;
+  uniqueArtists: number;
+  uniqueAlbums: number;
+  activeDays: number;
+  longestStreak: number;
+  /** Ranked by time listened. A listen counts for the album artist when there is one. */
+  topArtists: { name: string; listenedMs: number; plays: number; tracks: number }[];
+  topAlbums: { name: string; artist: string; listenedMs: number; plays: number; tracks: number }[];
+  topTracks: {
+    title: string;
+    artist: string;
+    album: string;
+    /** The id the plays were logged under (e.g. your stream or file id); `title||artist` when there was none. */
+    trackId: string;
+    listenedMs: number;
+    plays: number;
+  }[];
+  buckets: HistoryBucket[];
+  /** The bucket with the most listening, or null for none. */
+  busiest: HistoryBucket | null;
+  /** Time per local hour of the day (24 entries from midnight). */
+  byHour: number[];
+  /** Time per weekday, starting on `firstDayOfWeek`. */
+  byWeekday: number[];
+  /** 1 (Monday) to 7 (Sunday). */
+  firstDayOfWeek: number;
+  /** Time by source: `local`, `subsonic`, or a plugin's provider name. */
+  bySource: Record<string, number>;
+  /** 0 when there is no listening in the period. */
+  firstPlayedMs: number;
+  lastPlayedMs: number;
+}
+
+/** What `history.periods` returns: only years and months with listening in them. */
+export interface HistoryPeriods {
+  /** Newest year first. */
+  years: {
+    year: number;
+    listenedMs: number;
+    plays: number;
+    /** Oldest first; `month` is 1-12. */
+    months: { month: number; listenedMs: number; plays: number }[];
+  }[];
+  firstPlayedMs: number;
+  lastPlayedMs: number;
+}
+
+/**
+ * How the user wants listening time written: `hours` ("412.5 hr"), `minutes`
+ * ("24,750 min"), or `auto` (the unit each figure suits). One setting for
+ * Elbert's statistics and every plugin's, so a plugin that shows listening time
+ * should follow it.
+ */
+export type StatsTimeUnit = 'auto' | 'hours' | 'minutes';
+
+/** No permission needed. */
+export interface Stats {
+  timeUnit(): Promise<StatsTimeUnit>;
+  /** Changes the setting for everything (Settings → Appearance, the statistics page). Do this from a control the user pressed. */
+  setTimeUnit(unit: StatsTimeUnit): Promise<void>;
+  /** Called when the unit changes, whoever changed it. Returns an unsubscribe function. */
+  onTimeUnitChange(fn: (unit: StatsTimeUnit) => void): () => void;
 }
 
 /** Needs `lyrics`. */
