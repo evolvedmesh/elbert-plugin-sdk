@@ -230,6 +230,16 @@ is whole minutes (`24,750 min`). `stats.onTimeUnitChange(fn)` (or
 page can redraw. `stats.setTimeUnit(unit)` changes it for everything; call it from a control the
 user pressed, not on your own.
 
+**Resuming a stream.** Elbert remembers the last song and queue across launches, but never a stream's
+URL (it may carry your key, and may not outlive the session). When a remembered stream of yours is
+played, `player.resumeStream(fn)` is asked for a fresh one: return its URL, a `StreamTrack` to replace
+what was remembered, or `null`. Without it, Elbert plays a copy from the library if there is one, or
+says it can't. Check it exists first: an older Elbert doesn't have it.
+
+```ts
+elbert.player.resumeStream?.((track) => service.streamUrl(idOf(track.id)));
+```
+
 **Lyrics.** `lyrics.provide(fn)` supplies lyrics (LRC or plain text) for your own streams; Elbert
 asks you first for a track of yours. Return `null` for none.
 

@@ -338,6 +338,16 @@ export interface Player {
   onChange(fn: (e: { currentId: string | null; playing: boolean; durationMs: number; queue: string[]; index: number }) => void): () => void;
   /** Once a second while subscribed. */
   onTick(fn: (e: { currentId: string | null; positionMs: number; playing: boolean }) => void): () => void;
+  /**
+   * Gives a stream of yours from an earlier launch a fresh URL. Elbert remembers
+   * the last song and queue across launches, but never a stream's URL, so when a
+   * remembered stream of yours is played it asks here. Answer with its URL, a
+   * `StreamTrack` to replace what was remembered, or `null` if it can't be played.
+   * Without this (or on `null`), Elbert plays a copy from the library if there is
+   * one, or says it can't. Check `elbert.player.resumeStream` exists: an older
+   * Elbert doesn't have it.
+   */
+  resumeStream(fn: (track: LibraryTrack) => Promise<string | Partial<StreamTrack> | null> | string | Partial<StreamTrack> | null): Promise<void>;
 }
 
 export interface SongRef {
