@@ -678,4 +678,11 @@ export interface Ui {
   reveal(path: string): Promise<boolean>;
   showLyrics(track: StreamTrack): Promise<void>;
   showTrackInfo(opts: { title?: string; icon?: IconName; rows: [label: string, value: string][] }): Promise<void>;
+  /**
+   * Elbert's About sheet for an album, artist or playlist: facts as label/value rows (empty values
+   * are left out), then the words, then a link to where they came from (http(s) only). What a
+   * `StickyHeader`'s "About" menu entry and `onSummary` open on Elbert's own pages. Newer than API
+   * version 1's first release: check `typeof elbert.ui.details === 'function'`.
+   */
+  details?(opts: { title: string; facts?: { label: string; value: string }[]; text?: string; sourceUrl?: string }): Promise<void>;
 }

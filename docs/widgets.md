@@ -106,7 +106,7 @@ A page's scroll view. Its children are slivers: wrap ordinary widgets in `Sliver
 | -------------- | -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `slivers`      | children | none       | The slivers, in order.                                                                                                                                 |
 | `topInset`     | bool     | `true`     | Adds the space for the shell's top bar before the first sliver. Pass `false` when a header sits above or the page is inside `SectionScaffold`.         |
-| `bottomInset`  | string   | `"scroll"` | Space after the last sliver: `"scroll"` clears the bottom of the screen, `"dock"` clears the phone dock (120 on wider layouts), `"none"` adds nothing. |
+| `bottomInset`  | string   | `"scroll"` | Space after the last sliver: `"scroll"` clears the bottom of the screen, `"dock"` clears the phone dock (120 on wider layouts), `"header"` is `"dock"` that also grows to let a `StickyHeader` (at its default heights) collapse fully on a short page, as Elbert's detail pages do, `"none"` adds nothing. |
 | `bleed`        | bool     | `false`    | Lets horizontally scrolling rows run to the screen edge on a phone.                                                                                    |
 | `refreshEvent` | string   | none       | Event name; enables pull-to-refresh.                                                                                                                   |
 
@@ -333,11 +333,12 @@ PageHeader(title: "Playlists", caption: data.count, actions: data.actions, onAct
 
 ### SectionHeading
 
-A heading inside a page with an optional "See all" button.
+A heading inside a page, drawn as Elbert's Home section titles are, with an optional caption and "See all" button.
 
 | Argument      | Type   | Default     | Meaning                                      |
 | ------------- | ------ | ----------- | -------------------------------------------- |
 | `title`       | string | `""`        | The heading.                                 |
+| `caption`     | string | none        | A line under it: why the section is there.   |
 | `seeAllLabel` | string | `"See all"` | Button label.                                |
 | `onSeeAll`    | tap    | none        | The button is shown only when this is bound. |
 
@@ -528,9 +529,10 @@ A horizontal shelf of album cards, bled to the screen edge on a phone. On deskto
 | `innerPadding` | number | `0`         | Extra horizontal padding inside the rail.                                                                                                                                            |
 | `spacing`      | number | `4`         | Gap between cards. Each card already has 8 of padding around its artwork (where its hover surface shows).                                                                            |
 | `onTap`        | event  | none        | Payload `{ index, id }`.                                                                                                                                                             |
+| `onPlay`       | event  | none        | Shows Elbert's Play button on a tile under the pointer, as on its own Home. Payload `{ index, id }`.                                                                                 |
 
 ```
-CardRail(size: "home", items: data.recent, onTap: event "recent" {})
+CardRail(size: "home", items: data.recent, onTap: event "recent" {}, onPlay: event "playRecent" {})
 ```
 
 ### CardGrid
@@ -547,9 +549,32 @@ A grid of album cards. Columns follow the width of the grid: 2 below 500, 3 belo
 | `hasMore`      | bool   | `false`                       | Adds a trailing load-more cell (only if `onLoadMore` is bound).                                           |
 | `onLoadMore`   | tap    | none                          | Fired when the load-more cell scrolls into view; make the handler idempotent.                             |
 | `onTap`        | event  | none                          | Payload `{ index, id }`.                                                                                  |
+| `onPlay` | event | none | Elbert's hover Play button on each tile. Payload `{ index, id }`. |
 
 ```
 CardGrid(sliver: true, items: data.stations, hasMore: data.hasMore, onLoadMore: event "more" {}, onTap: event "play" {})
+```
+
+### SpotlightCard
+
+The big card on Elbert's Home, where it shows what's playing, for one thing of yours: its cover with a glow in the cover's own colour, washed in from the art's side, a small coloured label, the title, a line of details, a round Play button and a second button. It sizes itself, or fills a fixed height (the cover grows to 168). Under 440 wide it tightens and the second button becomes an icon.
+
+| Argument          | Type   | Default            | Meaning                                            |
+| ----------------- | ------ | ------------------ | -------------------------------------------------- |
+| `cover`           | string | none               | Artwork.                                           |
+| `placeholderIcon` | string | none               | Icon drawn when there is no cover.                 |
+| `eyebrow`         | string | `""`               | The small label over the title (`"ON REPEAT"`).       |
+| `title`           | string | `""`               | Title.                                             |
+| `subtitle`        | string | `""`               | One line under it.                                 |
+| `onTap`           | tap    | none               | The card.                                          |
+| `onPlay`          | tap    | none               | The round Play button; hidden when unbound.        |
+| `playBusy`        | bool   | `false`            | A spinner in the Play button, disabled.            |
+| `onOpen`          | tap    | none               | The second button; hidden when unbound.            |
+| `openLabel`       | string | `"Open"`           | Its label.                                         |
+| `openIcon`        | string | `"arrow-up-right"` | Its icon.                                          |
+
+```
+SizedBox(height: 216.0, child: SpotlightCard(cover: data.pick.cover, eyebrow: "ON REPEAT", title: data.pick.title, subtitle: data.pick.subtitle, onTap: event "open" {}, onPlay: event "play" {}, onOpen: event "open" {}))
 ```
 
 ### HeroCard
@@ -873,6 +898,10 @@ Song rows, as a sliver by default.
 | `onPlay`     | event  | none    | Row tapped. Payload `{ index, id }`.                                                                                                                                         |
 | `onArtist`   | event  | none    | Artist text tapped, for items with `artistLink: true`. Payload `{ index, id }`.                                                                                              |
 | `onMenu`     | event  | none    | A menu entry was picked (the row's overflow button, or right-click). Payload `{ index, id, action }`. No menu button is drawn when an item has no `menu` or this is unbound. |
+| `table`      | bool   | `true`  | Follow the user's choice of cards or a table (Settings → track table, or `TracksHeading`'s switch), as Elbert's own lists do. A table draws its column header above the rows and ignores `spacing`; plugin rows leave the rating and heart columns empty. Pass `false` to always draw cards. |
+| `provider`   | string | none    | What the table's Source column says for these rows (your service's name). |
+
+Besides the fields every list reads, an item may carry what the table's columns show: `album`, `durationMs`, `year`, `genre`, `trackNumber`, `discNumber`, `isrc`. A table row shows no `badge` or status icon.
 
 ```
 TrackList(
@@ -883,6 +912,20 @@ TrackList(
   onArtist: event "artist" {},
   onMenu: event "menu" {},
 )
+```
+
+### TracksHeading
+
+The heading over a detail page's tracks, as Elbert's album and playlist pages draw it: the title, any buttons of the page's, then the switch between cards and a table (drawn only where the window is wide enough for a table). Not a sliver.
+
+| Argument  | Type     | Default    | Meaning                                                      |
+| --------- | -------- | ---------- | ------------------------------------------------------------ |
+| `text`    | string   | `"Tracks"` | The title.                                                   |
+| `actions` | children | none       | Buttons before the switch (a playlist's "Done" while editing). |
+| `toggle`  | bool     | `true`     | Draw the cards/table switch.                                 |
+
+```
+SliverBox(child: Padding(padding: [16.0, 24.0, 16.0, 16.0], child: TracksHeading(text: "Tracks")))
 ```
 
 ### CompactTrackList
@@ -903,11 +946,11 @@ CompactTrackList(items: data.tracks, hasMore: data.hasMore, onLoadMore: event "m
 
 ### ReorderableTrackList
 
-A drag-to-reorder list with a remove button per row. It does not scroll by itself (it shrink-wraps), so place it in a scroll view. The plugin must apply the change and push the new list.
+A drag-to-reorder list with a remove button per row, its rows drawn as `TrackList`'s cards. It does not scroll by itself (it shrink-wraps), so place it in a scroll view. The plugin must apply the change and push the new list.
 
 | Argument      | Type   | Default    | Meaning                                                                                      |
 | ------------- | ------ | ---------- | -------------------------------------------------------------------------------------------- |
-| `items`       | list   | none       | Items: `id`, `title`, `artist`, `cover`.                                                     |
+| `items`       | list   | none       | Items: `id`, `title`, `artist`, `cover`, `duration`.                                         |
 | `removeLabel` | string | `"Remove"` | Tooltip of the remove button.                                                                |
 | `onReorder`   | event  | none       | Payload `{ from, to }`: indices in the list as shown, `to` already adjusted for the removal. |
 | `onRemove`    | event  | none       | Payload `{ index }`.                                                                         |
@@ -918,7 +961,7 @@ ReorderableTrackList(items: data.editItems, removeLabel: "Remove from playlist",
 
 ### StickyHeader
 
-The detail-page header that stays pinned as it collapses: a large cover over a soft wash of its own colours with a glow in its accent, the type label, title, subtitle, info chips, Play, Shuffle and an optional ⋯ menu. Collapsed, a bar with the cover, title and the same menu. If scrolling stops half-way, it finishes collapsing or expanding, whichever is nearer. On a phone it is full-bleed: no card, and instead of the wash the cover itself runs across the top of the screen, edge to edge and up behind the status bar (through the space `ScrollPage`'s `topInset` leaves above it), fading into the page under the title and buttons. A sliver; use it inside `ScrollPage`. It animates on the nearest `Stagger`.
+The detail-page header that stays pinned as it collapses — the same header Elbert's album, artist and playlist pages use: a large cover over a soft wash of its own colours with a glow in its accent, the type label, title, subtitle, a summary line (or info chips), Play, Shuffle, an optional Download and an optional ⋯ menu. Collapsed, a bar with the cover, title and the same menu. If scrolling stops half-way, it finishes collapsing or expanding, whichever is nearer. On a phone it is full-bleed: no card, and instead of the wash the cover itself runs across the top of the screen, edge to edge and up behind the status bar (through the space `ScrollPage`'s `topInset` leaves above it), fading into the page under the title and buttons. A sliver; use it inside `ScrollPage`. It animates on the nearest `Stagger`.
 
 | Argument         | Type   | Default | Meaning                                    |
 | ---------------- | ------ | ------- | ------------------------------------------ |
@@ -926,10 +969,18 @@ The detail-page header that stays pinned as it collapses: a large cover over a s
 | `subtitle`       | string | none    | Subtitle (for example the artist).         |
 | `type`           | string | `""`    | Small type label (`"ALBUM"`, `"STATION"`). |
 | `cover`          | string | none    | Artwork.                                   |
-| `info`           | list   | none    | Info columns: `label`, `value`.            |
+| `backdrop`       | string | none    | The artwork the wash and glow come from, when `cover` is not one. |
+| `hero`           | string | none    | A large image (URL or path) drawn sharp across the whole header in place of the cover and its wash, as on Elbert's album and artist pages. Fetched once and cached; ignored when under 800 px wide, and until it has arrived. Send at least 1600 px. |
+| `heroPhoto`      | bool   | `false` | The `hero` is a photo of someone: keep its upper part in the header's wide crop. |
+| `summary`        | string | none    | One quiet line (`"12 songs · 48 min"`), what Elbert's own headers show. Prefer it to `info`. |
+| `onSummary`      | tap    | none    | Marks the summary as having more, and opens it (Elbert opens its About sheet: `elbert.ui.details`). |
+| `info`           | list   | none    | Info chips: `label`, `value`.              |
 | `onPlayAll`      | tap    | none    | Play button.                               |
 | `onShuffle`      | tap    | none    | Shuffle button.                            |
 | `onSubtitle`     | tap    | none    | Makes the subtitle tappable when bound.    |
+| `onDownload`     | tap    | none    | A Download button beside Play and Shuffle. |
+| `downloadLabel`  | string | `"Download"` | Its label (`"Download (12)"`, `"Downloading…"`). |
+| `downloadBusy`   | bool   | `false` | A spinner in place of its icon, disabled.  |
 | `menu`           | list   | none    | ⋯ menu items: `id`, `label`, `icon`, `destructive` (drawn in red, after a divider). |
 | `onMenu`         | event  | none    | Payload `{ id }`. The menu shows only when this is bound. |
 | `back`           | bool   | `true`  | Show a back button.                        |
@@ -941,9 +992,10 @@ The detail-page header that stays pinned as it collapses: a large cover over a s
 ```
 ScrollPage(
   topInset: false,
-  bottomInset: "dock",
+  bottomInset: "header",
   slivers: [
-    StickyHeader(title: data.title, subtitle: data.subtitle, type: "STATION", cover: data.cover, info: data.info, onPlayAll: event "play" {}, onShuffle: event "play" {}),
+    StickyHeader(title: data.title, subtitle: data.subtitle, type: "ALBUM", cover: data.cover, summary: data.summary, onSummary: event "about" {}, onPlayAll: event "play" {}, onShuffle: event "shuffle" {}, onDownload: event "download" {}),
+    SliverBox(child: Padding(padding: [16.0, 24.0, 16.0, 16.0], child: TracksHeading())),
     TrackList(items: data.tracks, onPlay: event "play" {}),
   ],
 )
