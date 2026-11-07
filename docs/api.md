@@ -356,6 +356,14 @@ hint, initial })` (a string, or `null` when cancelled), `ui.openUrl`, `ui.reveal
 `storage`), `ui.showLyrics(track)` and `ui.showTrackInfo({ rows })`, the same sheet Elbert uses for
 its own tracks.
 
+`ui.details({ title, facts, text, sourceUrl })` is the About sheet of Elbert's own album and artist
+pages: `facts` are `{ label, value }` rows (empty values are left out), then `text`, then a link to
+`sourceUrl` (http(s) only). Open it from a `StickyHeader`'s "About" menu entry and its `onSummary`,
+as Elbert's pages do. It came after the first release of API version 1, so check
+`typeof elbert.ui.details === 'function'`; the `StickyHeader` `summary`/`onDownload`, `TrackList`
+table, `TracksHeading` and `ScrollPage` `bottomInset: "header"` arrived in the same Elbert, so the
+same check tells you those are there.
+
 `ui.pickFiles({ extensions?, multiple?, title? })` opens the system file picker and resolves with
 the chosen paths (an empty list when cancelled). The plugin may read a picked file without
 `storage`.
